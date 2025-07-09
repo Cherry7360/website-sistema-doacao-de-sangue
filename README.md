@@ -1,4 +1,4 @@
-# website-sistema-doacao-de-sangue
+# Website-sistema-doacao-de-sangue
 
 Este projeto é um sistema web para gestão de doações de sangue. Possui duas áreas principais: uma para doadores e outra para funcionários do centro de saúde. 
 Os doadores podem:
@@ -8,7 +8,7 @@ Os doadores podem:
 Os funcionários podem:
 - Gerir doadores, agendamentos e campanhas
 - Enviar notificações aos doadores
-- 
+  
 
 # Tecnológias
 ### Frontend:
