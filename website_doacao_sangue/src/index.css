@@ -1,11 +1,3 @@
-@import 'tailwindcss';
-
-@theme{ 
-
-    --color-azul:#419AFF;
-    --color-primary:#c3c304;
-    --color-verde: #08D255;
-    --color-vermelhosg:#AA2828;
-    --color-cinza:#C5B4B4;
-     
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

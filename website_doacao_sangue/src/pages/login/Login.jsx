@@ -1,5 +1,4 @@
-import Botao from '../../components/Botao'
-import Inputs from '../../components/Inputs'
+
 const Login =()=>{
    return(
     <div className='items-center justify-center' > 

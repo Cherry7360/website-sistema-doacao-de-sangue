@@ -1,8 +1,5 @@
 
-
 import {BrowserRouter, Routes, Route} from 'react-router-dom'
-
-
 import Login from './pages/login/Login';
 import Layout from './components/Layout';
 import Registar from './pages/Registar/Registar';
@@ -30,3 +27,4 @@ function App() {
 }
 
 export default App
+
