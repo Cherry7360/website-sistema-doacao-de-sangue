@@ -1,19 +1,25 @@
 import bgBemVindo from "../../assets/recolha_sangue.png";
 import cruz_v from "../../assets/cruz_vermelha.png";
 
-
-
 const PaginaPrincipal=()=>{
    return(
     <div className=' space-y-16 p-6' > 
-      <section
-        className="w-full min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat text-white"
+     <section
+        className="w-full min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat relative"
         style={{ backgroundImage: `url(${bgBemVindo})` }}
       >
-        <h1 className="text-4xl font-bold text-vermelho mb-4">Bem-vindo ao Sistema de Doação de Sangue</h1>
-        <p className="text-gray-700 text-lg max-w-2xl mx-auto">
-          Salve vidas com um simples gesto. Junte-se a nós e faça a diferença hoje.
-        </p>
+        
+        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+
+       
+        <div className="relative text-center px-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            Bem-vindo ao Sistema de Doação de Sangue
+          </h1>
+          <p className="text-white text-lg md:text-xl max-w-2xl mx-auto">
+            Salve vidas com um simples gesto. Junte-se a nós e faça a diferença hoje.
+          </p>
+        </div>
       </section>
 
       <section className="bg-white py-12 rounded-2xl shadow-md">

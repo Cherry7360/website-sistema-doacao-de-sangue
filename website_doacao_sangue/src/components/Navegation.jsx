@@ -3,23 +3,26 @@ export const  NavItems = [
     name: "Dashboard",
     path:"/dash"
   },
-
+ {
+    name: "Agendamento",
+    path:"/agendamentos/gerir_agendamentos"
+  },
   {
     name: "Doacao",
-    path: "/gerir_doacoes",
+    path: "/doacoes/gerir_doacoes",
   },
-  {
-    name: "Doadores",
-    path: "/gerir_doadores",
-  },
+  
     {
     name: "Campanhas",
-    path: "/gerir_campanhas",
+    path: "/campanhas/gerir_campanhas",
   },
     {
     name: "Notificações",
-    path: "/gerir_notificacoes",
-  },  {
+    path: "/notificacoes/gerir_notificacoes",
+  }, {
+    name: "Doadores",
+    path: "/gerir_doadores",
+  }, {
     name: "Estoque",
     path: "/estoque",
   }

@@ -1,10 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from "../../context/AuthContext";
-import { useState } from 'react';
-import { jwtDecode } from "jwt-decode";
+import { useState ,useEffect} from 'react';
+import axios from "axios";
 
-
-
+const base = "http://localhost:5080/loginUsuario"; 
 
 const Login = () => {
 
@@ -13,7 +12,13 @@ const Login = () => {
   const [passwordDoador, setPasswordDoador] = useState("");
   const [mensagemErro, setMensagemErro] = useState("");
 
-  const auth = useAuth();
+  const {login,usuario} = useAuth();
+
+  useEffect(() => {
+  if (usuario?.role === "doador") alert("Login de doador efetuado!");
+  if (usuario?.role === "funcionario") alert("Login de funcionário efetuado!");
+  }, [usuario]);
+
 
   const validarCampos = () => {
     if (!codigoDoador || !passwordDoador) {
@@ -29,58 +34,28 @@ const Login = () => {
     return true;
   };
 
-  const submitHandler = async (event) => {
-    event.preventDefault();
-    setMensagemErro("");
+ const submitHandler = async (e) => {
+  e.preventDefault();
+  setMensagemErro("");
 
-    if (!validarCampos()) return;
+  if (!validarCampos()) return;
 
-    try {
-      const resposta = await fetch("http://localhost:5080/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          codigo_usuario: codigoDoador,
-          palavra_passe: passwordDoador
-        })
-      });
+  try {
+    const res = await axios.post(base, {
+      codigo_usuario: codigoDoador,
+      palavra_passe: passwordDoador
+    });
 
-      const dados = await resposta.json();
+    // Atualiza estado global
+    login(res.data.token);
 
-     if (resposta.ok) {
-
-      const token = dados.token;
-      const dadosUser = jwtDecode(token); // objeto com tipo user
-      console.log('dados do User:',dadosUser);
-      localStorage.setItem("token", dados.token);
-      console.log('dados token;',dados.token);
-     
-
-    if (dadosUser.role === 'funcionario') {
-      alert("Login de funcionário efetuado!");
-    
-    } 
-    else if (dadosUser.role === 'doador') {
-      alert("doador login efetuado!");
-    }
-
- 
-  
-  auth.login(token); // salva provider
-
-  navigate("/paginaprincipal");
-
-      } else {
-        setMensagemErro(dados.mensagem || "Erro ao fazer login.");
-      }
-    } catch (erro) {
-      console.error("Erro na requisição:", erro);
-      setMensagemErro("Erro ao conectar ao servidor.");
-    }
-  };
-
+    // Redireciona
+    navigate("/paginaprincipal");
+  } catch (erro) {
+    console.error("Erro no login:", erro);
+    setMensagemErro(erro.response?.data?.mensagem || "Erro ao conectar ao servidor.");
+  }
+};
   const redirectToCadastro = () => {
     navigate('/registar');
   };

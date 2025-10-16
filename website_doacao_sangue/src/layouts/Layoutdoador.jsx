@@ -6,7 +6,7 @@ const Layoutdoador = () => {
     <div className="flex flex-col w-full h-screen">
      <Navbar></Navbar>
 
-      {/* Conteúdo principal */}
+      
       <main className="flex-1 mt-[60px] mb-[60px] p-8">
         <Outlet />
       </main>

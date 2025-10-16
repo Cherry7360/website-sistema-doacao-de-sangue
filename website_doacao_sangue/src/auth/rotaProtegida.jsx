@@ -1,4 +1,4 @@
-// src/auth/RotaProtegida.jsx
+
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -22,7 +22,4 @@ const RotaProtegida = ({ children,role }) => {
 };
 export default RotaProtegida;
 
-/*
-  if (role && usuario.role !== role) {
-    return <Navigate to="/nao-autorizado" />;
-  }*/
+
