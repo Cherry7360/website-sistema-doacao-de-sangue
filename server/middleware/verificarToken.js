@@ -1,23 +1,33 @@
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+dotenv.config();
 
-const jwt = require('jsonwebtoken');
+export  const verificarToken = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+  if (!authHeader) return res.status(401).json({ mensagem: "Token não fornecido" });
 
-const verificarToken = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ erro: "Token não fornecido" });
-  }
-
-
-  const token = req.headers.authorization?.split(' ')[1]; // "Bearer token..."
+  const token = authHeader.split(" ")[1]; // Bearer <token>
+  if (!token) return res.status(401).json({ mensagem: "Token inválido" });
 
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET); // Usa a tua chave secreta real
-    req.user = decoded;// os controllers têm acesso ID, CODIGO, ROLE
-    next();
+   
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+
+    if (!decoded.id || !decoded.codigo || !decoded.tipo) {
+      return res.status(400).json({ mensagem: "Token incompleto" });
+    }
+
+   
+    req.usuario = {
+      id: decoded.id,
+      codigo: decoded.codigo,
+      tipo: decoded.tipo, 
+    };
+
+    next(); // segue para o controller
   } catch (err) {
-    return res.status(403).json({ erro: "Token inválido" });
+    return res.status(403).json({ mensagem: "Token inválido ou expirado" });
   }
 };
-
-module.exports = verificarToken;

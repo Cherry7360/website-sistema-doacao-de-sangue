@@ -1,12 +1,8 @@
-const express = require('express');
+import express from 'express';
+import {registarDoador } from '../controllers/RegistarDoadorController.js';
+
 const router = express.Router();
 
-const {registarDoador }= require('../controllers/RegistarDoadorController')
+router.post('/', registarDoador);
 
-
-
-router.post('/',registarDoador );
-
-
-
-module.exports = router;
+export default router;
