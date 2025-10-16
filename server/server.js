@@ -1,62 +1,50 @@
 const express = require('express');
-const client_bd = require('./db');
+const cors = require('cors'); 
+
 
 const app = express();
-const port = 3000;
+
+/*
+const campanhasRoute= require('./routes/CampanhasRoute');
+const DoacaoRoute= require('./routes/DoacaoRoute');
+const agendamentoRoute= require('./routes/AgendamentoRoute');
+const notificacaoRoute= require('./routes/NotificacaoRoute');
+const doadoresRoute= require('./routes/DoadoresRoutes')
+*/
+const loginRoute = require('./routes/LoginRoute');
+
+const registoDoador=require('./routes/RegistarDoadorRoute');
+
+//const alterarSenhaRoute = require('./routes/alterarSenha');
+
+const port =  process.env.PORT || 5000;
+
+app.use(cors({
+  origin: 'http://localhost:3080' 
+}));
 
 // Middleware para parsear JSON
 app.use(express.json());
 
 // Rota inicial
 app.get('/', (req, res) => {
-  res.send('Bem-vindo ao sistema de doações de sangue!para 2025');
-});
-
-// Rota para buscar os usuários do banco de dados
-
-// todos usuarios
-app.get('/user', async (req, res) => {
-  try {
-    const resultado = await client_bd.query('SELECT * FROM usuarios');
-    res.json(resultado.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ erro: 'Erro ao buscar usuarios' });
-  }
-});
-// um usuario
-app.get('/user/:id', async (req, res) => {
-  try {
-    const {id}= req.params;
-    const resultado = await client_bd.query('SELECT * FROM usuarios where id = $1',[
-      id
-    ]);
-    res.json(resultado.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ erro: 'Erro ao mostrar usuario' });
-  }
+  res.send('Bem-vindo ao sistema de doações de sangue! Para 2025');
 });
 
 
-///deletar usuario
-app.delete('/user/:id', async (req, res) => {
-  try {
-    const {id}= req.params;
-    const resultado = await client_bd.query('DELETE from usuarios where id = $1',[
-      id
-    ]);
-    res.json(resultado.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ erro: 'Erro ao remover usuario' });
-  }
-});
+//app.use('/campanhas', campanhasRoute);
+//app.use('/doacao', DoacaoRoute);
+//app.use('/agendamento', agendamentoRoute);
+//app.use('/notificacoes', notificacaoRoute);
+app.use('/login', loginRoute);
+//app.use('/doadores',doadoresRoute);
+app.use('/registo',registoDoador)
+
+//app.use('/alterar-senha', alterarSenhaRoute);
 
 
 // Iniciar o servidor
 app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);
 });
-
 
