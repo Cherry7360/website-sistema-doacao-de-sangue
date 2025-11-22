@@ -10,6 +10,8 @@ import doacaoRoutes from './routes/DoacaoRoute.js';
 import notificacaoRoutes from './routes/NotificacaoRoute.js';
 import campanhaRoutes from './routes/CampanhaRoute.js';
 import agendamentoRoutes from './routes/AgendamentoRoute.js';
+import DashRoutes from './routes/DashRoute.js';
+import UsuarioRoutes from './routes/UsuariosRoute.js';
 
 dotenv.config();
 
@@ -27,6 +29,8 @@ app.use('/doacoes',doacaoRoutes);
 app.use('/notificacoes',notificacaoRoutes);
 app.use('/campanhas',campanhaRoutes);
 app.use('/agendamentos',agendamentoRoutes);
+app.use('/dash',DashRoutes);
+app.use('/usuario',UsuarioRoutes);
 
 
 app.get('/', (req, res) => res.send('Servidor do Sistema de Doação de Sangue!'));

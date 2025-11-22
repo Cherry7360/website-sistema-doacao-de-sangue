@@ -1,6 +1,9 @@
 import Doacao from "../models/Doacao.js";
 import Doador from "../models/Doador.js";
 import Usuario from "../models/Usuario.js";
+import Funcionario from "../models/Funcionario.js";
+import { doacaoSchema} from "../Schemas/doacaoSchema.js"; 
+
 
 export const getDoacoes= async(req,res)=>{
    try {
@@ -11,59 +14,60 @@ export const getDoacoes= async(req,res)=>{
           include: [ {model: Usuario, attributes: ["nome"], },],
         },
       ], attributes: ["id_doacao", "data_doacao", "estado"],
+       order: [["data_doacao", "DESC"]],
+   
     });
 
-    const resultado = doacoes.map((d) => ({
-      id_doacao: d.id_doacao,
-      nome: d.Doador?.Usuario?.nome || "Não encontrado",
-      tipo_sangue:d.Doador?.tipo_sangue, 
-      data_doacao: d.data_doacao,
-      estado: d.estado
-    }));
 
-    res.json(resultado);
+    res.json(doacoes);
   } catch (err) {
     console.error("Erro ao listar doações:", err);
     res.status(500).json({ error: "Erro ao buscar doações" });
   }
 }
+
+
+
 export const adicionarDoacao = async (req, res) => {
+  const result = doacaoSchema.safeParse(req.body);
+
+  if (!result.success) {
+    return res.status(400).json({ errors: result.error.errors });
+  }
+
   try {
-    const { id_doador, descricao, data_doacao, estado, id_funcionario } = req.body;
+    const { id_doador, descricao,data_doacao, estado } = result.data; 
+    const codigo_usuario = req.usuario.codigo;
 
-    if (!id_doador) return res.status(400).json({ error: "id_doador é obrigatório" });
+    if (!id_doador) return res.status(400).json({ error: "ID do doador é obrigatório" });
 
-    const doador = await Doador.findByPk(id_doador);
+     const doador = await Doador.findByPk(id_doador, {
+      attributes: ["tipo_sangue"] 
+    });
     if (!doador) return res.status(400).json({ error: "Doador não encontrado" });
 
-    const payload = { id_doador, descricao: descricao || null };
+    const funcionario = await Funcionario.findOne({ where: { codigo_usuario } });
+    if (!funcionario) {
+      return res.status(404).json({ message: "Funcionário não encontrado" });
+    }
 
-    if (id_funcionario) payload.id_funcionario = id_funcionario;
-    if (data_doacao) payload.data_doacao = new Date(data_doacao);
-    if (estado) payload.estado = estado;
+ 
 
-    const novaDoacao = await Doacao.create(payload);
+
+    const novaDoacao = await Doacao.create({
+      id_doador,
+      id_funcionario: funcionario.id_funcionario,
+      descricao: descricao || null,
+      tipo_sangue:doador.tipo_sangue,
+      estado: estado || "Pendente",
+      data_doacao,
+    });
+
     return res.status(201).json(novaDoacao);
-  } catch (err) {
-    console.error("Erro ao adicionar doação:", err);
-    return res.status(500).json({ error: "Erro interno ao adicionar doação" });
-  }
-};
-export const atualizarDoacao = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { estado } = req.body;
 
-    const doacao = await Doacao.findByPk(id);
-    if (!doacao) return res.status(404).json({ error: "Doação não encontrada" });
-
-    doacao.estado = estado || doacao.estado;
-    await doacao.save();
-
-    res.json(doacao);
-  } catch (err) {
-    console.error("Erro ao atualizar doação:", err);
-    res.status(500).json({ error: "Erro interno ao atualizar doação" });
+  } catch (error) {
+    console.error("Erro ao criar doação:", error);
+    return res.status(500).json({ error: "Erro interno do servidor" });
   }
 };
 
@@ -81,3 +85,22 @@ export const removerDoacao = async (req, res) => {
     res.status(500).json({ error: "Erro interno ao deletar doação" });
   }
 };
+
+
+      /*export const atualizarDoacao = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { estado } = req.body;
+
+    const doacao = await Doacao.findByPk(id);
+    if (!doacao) return res.status(404).json({ error: "Doação não encontrada" });
+
+    doacao.estado = estado || doacao.estado;
+    await doacao.save();
+
+    res.json(doacao);
+  } catch (err) {
+    console.error("Erro ao atualizar doação:", err);
+    res.status(500).json({ error: "Erro interno ao atualizar doação" });
+  }
+};*/

@@ -6,7 +6,7 @@ import Funcionario from "./Funcionario.js";
 const Doacao = sequelize.define('Doacao', {
   id_doacao: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true }, // chave primária
   descricao: DataTypes.TEXT,
-  data_doacao: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }, 
+  data_doacao: DataTypes.DATEONLY, 
   estado: { type: DataTypes.STRING, defaultValue: "Pendente" },
 }, { tableName: 'doacoes', timestamps: false });
 

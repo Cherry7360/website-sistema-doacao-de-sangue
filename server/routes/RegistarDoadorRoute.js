@@ -1,8 +1,8 @@
 import express from 'express';
-import {registarDoador } from '../controllers/RegistarDoadorController.js';
+import {registarDoador  } from '../controllers/RegistarDoadorController.js';
 
 const router = express.Router();
 
-router.post('/', registarDoador);
+router.post('/doador', registarDoador);
 
 export default router;

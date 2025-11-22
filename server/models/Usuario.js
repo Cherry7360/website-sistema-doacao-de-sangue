@@ -28,4 +28,5 @@ import { sequelize } from '../db.js';
   tableName: 'usuarios',
   timestamps: false
 });
+
 export default Usuario; 

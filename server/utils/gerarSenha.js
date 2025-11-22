@@ -1,4 +1,4 @@
-// utils/gerarSenha.js
+
 import bcrypt from "bcrypt";
 
 // Função para gerar senha numérica aleatória de 7 dígitos

@@ -1,21 +1,32 @@
-
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import { loginSchema } from '../Schemas/loginSchema.js';
 import Usuario from '../models/Usuario.js';
 
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET;
 
 export const loginUsuario = async (req, res) => {
-  const { codigo_usuario, palavra_passe } = req.body;
+  // Validação do corpo usando Zod
+  const parseResult = loginSchema.safeParse(req.body);
+
+  if (!parseResult.success) {
+    // Retorna a primeira mensagem de erro encontrada
+    const firstError = Object.values(parseResult.error.flatten().fieldErrors)[0][0];
+    return res.status(400).json({ mensagem: firstError });
+  }
+
+  const { codigo_usuario, palavra_passe } = parseResult.data;
 
   try {
     const usuario = await Usuario.findOne({ where: { codigo_usuario } });
-    if (!usuario) return res.status(404).json({ mensagem: 'Código não encontrado' });
+    if (!usuario) 
+      return res.status(404).json({ mensagem: 'Código ou senha incorretos' });
 
     const senhaValida = await bcrypt.compare(palavra_passe, usuario.palavra_passe);
-    if (!senhaValida) return res.status(401).json({ mensagem: 'Senha incorreta' });
+    if (!senhaValida) 
+      return res.status(404).json({ mensagem: 'Código ou senha incorretos' });
 
     const token = jwt.sign(
       { id: usuario.id_usuario, tipo: usuario.tipo_usuario, codigo: usuario.codigo_usuario },

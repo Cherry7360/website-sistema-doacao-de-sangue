@@ -8,10 +8,21 @@ const Notificacao = sequelize.define(
   "Notificacao",
   {
     id_notificacao: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+      titulo: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: "sem titulo",
+  },
     mensagem: DataTypes.TEXT,
     data_envio: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
     visto: { type: DataTypes.BOOLEAN, defaultValue: false }
+    , tipo: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: "null",
   },
+  },
+  
   { tableName: "notificacoes", timestamps: false }
 );
 

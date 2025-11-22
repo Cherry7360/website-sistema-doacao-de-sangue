@@ -1,10 +1,10 @@
-// src/models/Funcionario.js
+
 import { DataTypes } from "sequelize";
 import { sequelize } from "../db.js";
 import Usuario from "./Usuario.js";
 
 const Funcionario = sequelize.define('Funcionario', {
-   id_funcionario: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  id_funcionario: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   codigo_usuario: { type: DataTypes.STRING(16), allowNull: false },
   
 }, { tableName: 'funcionarios', timestamps: false });
