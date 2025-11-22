@@ -14,7 +14,10 @@ const NaoAutorizado = () => {
       <p className="text-lg">Você não tem permissão para acessar esta página.</p>
       <div>    
         <button className="bg-red-600 rounded-lg text-white hover:bg-red-700" onClick={voltarParaHome}>
-          Voltar para Home</button></div>
+          Voltar para Home</button>
+          </div>
+
+          
     </div>
   );
 };

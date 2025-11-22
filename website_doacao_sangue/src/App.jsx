@@ -21,6 +21,8 @@ import NotificacaoFuncionario from './pages/notificacao/NotificacaoFuncionario';
 import DoacaoFuncionario from './pages/Doacao/DoacaoFuncionario';
 import DoadorFuncionario from './pages/Doador/DoadorFuncionario';
 import CampanhaFuncionario from './pages/Campanha/CampanhaFuncionario';
+import CampanhasDoador from './pages/Campanha/CampanhasDoador';
+import SaberMais from './pages/SaberMais/SaberMais';
 
 function App() {
  
@@ -34,6 +36,9 @@ function App() {
             <Route index path="paginaprincipal" element={<PaginaPrincipal />} />
             <Route path="loginUsuario" element={<Login />} />
             <Route path="registar" element={<Registar />} />
+            <Route path="campanhas/doador" element={<CampanhasDoador/>} />
+            <Route path="sabermais/requisitos_doador" element={<SaberMais/>}/>
+
 
             <Route path="dash" role="funcionario" element={<RotaProtegida><Dashboard /></RotaProtegida>} />
                   <Route path="campanhas/gerir_campanhas"  role="funcionario" element={<RotaProtegida><CampanhaFuncionario/></RotaProtegida> }/>
@@ -43,12 +48,16 @@ function App() {
               <Route path="notificacoes/gerir_notificacoes"  role="funcionario" element={<RotaProtegida><NotificacaoFuncionario/></RotaProtegida> }/>
             </Route>
 
+             {/* Admin */}
+            <Route element={<RotaProtegida role="admin" > <Dashboard/></RotaProtegida>}>
+           
+            </Route> 
             {/* Doador (protegido) */}
             <Route element={<RotaProtegida role="doador" > <Layoutdoador/></RotaProtegida>}>
               <Route path="agendamentos/agendar_doador"  role="doador" element={<RotaProtegida><AgendamentoDoador /></RotaProtegida> }/>
               <Route path="doadores/perfil"  role="doador" element={<RotaProtegida><PerfilDoador/></RotaProtegida> }/>
               <Route path="notificacoes/"  role="doador" element={<RotaProtegida><NotificacaoDoador/></RotaProtegida> }/>
-
+           
             </Route> 
             
             {/* Página 403 */}

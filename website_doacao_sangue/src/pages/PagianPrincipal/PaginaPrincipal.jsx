@@ -1,5 +1,9 @@
 import bgBemVindo from "../../assets/recolha_sangue.png";
 import cruz_v from "../../assets/cruz_vermelha.png";
+import MS from "../../assets/MS.png";
+import { Link } from "react-router-dom";
+import SaberMais from "../SaberMais/SaberMais";
+import Card from "../../components/Cards";
 
 const PaginaPrincipal=()=>{
    return(
@@ -21,41 +25,60 @@ const PaginaPrincipal=()=>{
           </p>
         </div>
       </section>
-
-      <section className="bg-white py-12 rounded-2xl shadow-md">
-        <div className="max-w-5xl mx-auto text-center">
-          <h2 className="text-3xl font-semibold text-vermelho mb-6">Campanhas Ativas</h2>
-          <p className="text-gray-700 mb-4">
-           Lorem, ipsum dolor sit amet consectetur adipisicing elit. 
-          </p>
-          <button className="mt-4 px-6 py-3 bg-vermelho text-white rounded-xl hover:bg-red-600 transition duration-300">
-            Ver Campanhas
-          </button>
-        </div>
-      </section>
-
-       <section className="bg-gray-100 py-12 rounded-2xl shadow-md">
-        <div className="max-w-5xl mx-auto text-center">
-          <h2 className="text-3xl font-semibold text-gray-800 mb-6">Nossos Patrocinadores</h2>
-          <p className="text-gray-600 mb-4">
-            Lorem, ipsum dolor sit amet consectetur adipisicing elit. 
+        <Card className="bg-white py-12 rounded-2xl shadow-md">
+          <div className="max-w-5xl mx-auto text-center">
+            <h2 className="text-3xl font-semibold text-vermelho mb-6">Campanhas Ativas</h2>
+            <p className="text-gray-700 mb-4">
+            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Nunc convallis ex nec risus ornare, ac posuere massa consectetur. Nulla 
             </p>
-          <div className="flex flex-wrap justify-center gap-8 mt-8">
-            <div className=" p-4 rounded-xl shadow w-[250px] h-[230px] flex items-center justify-center text-gray-700 font-medium bg-cover bg-center bg-no-repeat "
-            style={{ backgroundImage: `url(${cruz_v})` }}>
-
-              
-            </div>
-            
+            <Link to="/campanhas/doador"
+              className="mt-4 px-6 py-3 bg-vermelho text-white rounded-xl hover:bg-red-600 transition duration-300 inline-block text-center">
+              Ver Campanhas
+            </Link>
           </div>
-        </div>
-      </section>
+       </Card>    
 
+      <Card className="bg-white py-12 rounded-2xl shadow-md">
+       <div className="max-w-5xl mx-auto text-center">
+            <h2 className="text-3xl font-semibold text-vermelho mb-6">Quem deve doar? </h2>
+            <p className="text-gray-700 mb-4">
+            Nunc convallis ex nec risus ornare, ac posuere massa consectetur. Nulla v .Nunc convallis ex nec risus ornare, ac posuere massa consectetur. Nulla v Nunc convallis ex nec risus ornare, ac posuere massa consectetur. Nulla v 
+            </p>
+            <Link to="/sabermais/requisitos_doador"
+              className="mt-4 px-6 py-3 bg-vermelho text-white rounded-xl hover:bg-red-600 transition duration-300 inline-block text-center">
+              Saber Mais
+            </Link>
+          </div>
+
+      </Card>
+     
+
+      <Card className="bg-white py-12 rounded-2xl shadow-md">
+       <div className="max-w-5xl mx-auto text-center">
+        <h2 className="text-3xl font-semibold text-gray-800 mb-6">Nossos Patrocinadores</h2>
+        <p className="text-gray-600 mb-4">
+          Lorem, ipsum dolor sit amet consectetur adipisicing elit.
+        </p>
+
+
+  <div className="flex flex-wrap justify-center gap-8 mt-8">
+    <div
+      className="p-4 rounded-xl shadow w-64 h-56 flex items-center justify-center text-gray-700 font-medium bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: `url(${cruz_v})` }}
+    >
+    </div>
+
+    <div
+      className="p-4 rounded-xl shadow w-64 h-56 flex items-center justify-center text-gray-700 font-medium bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: `url(${MS})` }}
+    >
+    </div>
+     </div>
+    </div>
+
+      </Card>
     </div>
     
    )
 }
 export default PaginaPrincipal
-//className="text-center py-16 bg-gradient-to-br from-blue-100 to-white rounded-2xl shadow-md"
-//bg-cover bg-center bg-no-repeat → ajusta bem a imagem.
-//min-h-screen w-full 

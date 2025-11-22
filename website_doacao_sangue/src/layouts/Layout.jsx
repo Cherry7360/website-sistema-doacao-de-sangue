@@ -10,13 +10,14 @@ import Sidebar from "../components/Sidebar";
 
   return (
     <div className="flex flex-col w-full h-screen">
-        <Navbar  onToggleSidebar={() => setShowSidebar(!showSidebar)} />
-          {usuario?.role === "funcionario" && showSidebar && (
-            <Sidebar></Sidebar>
-      )}
-        <main   className={`pt-16 p-4 transition-all duration-300 ${
-          usuario?.role === "funcionario" && showSidebar ? "ml-64" : "ml-0"
-        }`}>
+        <Navbar onToggleSidebar={() => setShowSidebar(!showSidebar)} />
+        {(usuario?.role === "funcionario" || usuario?.role === "admin") && showSidebar && (
+          <Sidebar />
+        )}
+       <main className={`pt-16 p-4 transition-all duration-300 ${
+  (usuario?.role === "funcionario" || usuario?.role === "admin") && showSidebar ? "ml-64" : "ml-0"
+}`}>
+
         <Outlet/>
         </main>
        
