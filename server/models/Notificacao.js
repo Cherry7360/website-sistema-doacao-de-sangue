@@ -14,12 +14,14 @@ const Notificacao = sequelize.define(
     defaultValue: "sem titulo",
   },
     mensagem: DataTypes.TEXT,
-    data_envio: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
-    visto: { type: DataTypes.BOOLEAN, defaultValue: false }
-    , tipo: {
+    data_envio:  DataTypes.DATEONLY,  
+ 
+    visto: { type: DataTypes.BOOLEAN, defaultValue: false },
+      hora_envio: DataTypes.TIME,
+     tipo: {
     type: DataTypes.STRING,
     allowNull: false,
-    defaultValue: "null",
+    defaultValue: "campanha",
   },
   },
   

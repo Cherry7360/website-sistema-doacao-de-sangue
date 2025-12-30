@@ -1,13 +1,16 @@
 import { Router } from "express";
-import {verificarToken} from "../middleware/verificarToken.js";
-import {enviarNotificacao,
-listarNotificacoesDoador, marcarNotificacaoComoVisto, getNotificacoesFuncionario
+import {verifyToken} from "../middleware/verifyToken.js";
+import {EnviarNotificacao,
+ListarNotificacoesDoador, MarcarNotificacaoComoVisto, ListarNotificacoesFuncionario
 } from "../controllers/NotificacaoController.js";
 
 const router = Router();
 
-router.get("/",verificarToken, listarNotificacoesDoador);
-router.put("/visto/:id_notificacao",verificarToken, marcarNotificacaoComoVisto);
-router.post("/gerir_notificacoes",verificarToken, enviarNotificacao);
-router.get("/gerir_notificacoes",verificarToken,getNotificacoesFuncionario);
+//rotas do doador
+router.get("/doador",verifyToken, ListarNotificacoesDoador);
+router.put("/visualizada",verifyToken, MarcarNotificacaoComoVisto);
+
+//rotas do funcionario
+router.post("/",verifyToken, EnviarNotificacao);
+router.get("/funcionario",verifyToken,ListarNotificacoesFuncionario);
 export default router;

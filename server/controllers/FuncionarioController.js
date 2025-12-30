@@ -1,3 +1,8 @@
+/**
+Retorna informações de um funcionário específico.
+Busca o usuário pelo código em req.usuario e seleciona apenas atributos essenciais; retorna 404 se não encontrado.
+
+ */
 import Usuario from "../models/Usuario.js";
 
 export const getInfoFuncionario = async (req, res) => {

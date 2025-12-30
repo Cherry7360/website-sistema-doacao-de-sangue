@@ -1,13 +1,14 @@
 import express from "express";
-import { getDoacoes,adicionarDoacao,removerDoacao} from "../controllers/DoacaoController.js";
-import {verificarToken} from "../middleware/verificarToken.js";
+import { ListarDoadores,CriarDoacao,RemoverDoacao,HistoricoDoacoesDoador,ObterInformacaoDoador} from "../controllers/DoacaoController.js";
+import {verifyToken} from "../middleware/verifyToken.js";
 
 const router = express.Router();
-
-router.get("/gerir_doacoes",verificarToken, getDoacoes);
-router.post("/gerir_doacoes", verificarToken,adicionarDoacao);
-router.delete("/gerir_doacoes/:id",removerDoacao);
-//router.put("/gerir_doacoes/:id",verificarToken,atualizarDoacao);
-
+// rotas do funcionario 
+router.get("/",verifyToken, ListarDoadores);
+router.post("/", verifyToken,CriarDoacao);
+router.delete("/:id",RemoverDoacao);
+//rotas do doador
+router.get("/doador/historico-doador",verifyToken,HistoricoDoacoesDoador);
+router.get("/doador/informacao-doador", verifyToken,ObterInformacaoDoador);
 
 export default router;

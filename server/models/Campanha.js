@@ -14,6 +14,8 @@ const Campanha = sequelize.define('Campanha', {
   estado: { type: DataTypes.BOOLEAN, defaultValue: true },
 }, { tableName: 'campanhas', timestamps: false });
 
+
+// Relacionamentos 
 Funcionario.hasMany(Campanha, { foreignKey: 'id_funcionario' });
 Campanha.belongsTo(Funcionario, { foreignKey: 'id_funcionario' });
 

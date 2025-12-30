@@ -9,6 +9,8 @@ const Funcionario = sequelize.define('Funcionario', {
   
 }, { tableName: 'funcionarios', timestamps: false });
 
+
+// Relacionamentos 
 Funcionario.belongsTo(Usuario, { foreignKey: 'codigo_usuario', targetKey: 'codigo_usuario' });
 Usuario.hasOne(Funcionario, { foreignKey: 'codigo_usuario', sourceKey: 'codigo_usuario' });
 export default Funcionario;

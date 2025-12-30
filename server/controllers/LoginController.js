@@ -1,3 +1,9 @@
+/*
+ Realiza login de um usuário do sistema.
+Valida dados do body com Zod, verifica existência do usuário e compara senha com bcrypt; 
+ Gera um token JWT com id, tipo e código do usuário se as credenciais forem válidas.
+
+*/
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
@@ -8,11 +14,11 @@ dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET;
 
 export const loginUsuario = async (req, res) => {
-  // Validação do corpo usando Zod
+
   const parseResult = loginSchema.safeParse(req.body);
 
   if (!parseResult.success) {
-    // Retorna a primeira mensagem de erro encontrada
+  
     const firstError = Object.values(parseResult.error.flatten().fieldErrors)[0][0];
     return res.status(400).json({ mensagem: firstError });
   }

@@ -1,4 +1,4 @@
-// shared/validation/agendamentoSchema.js
+
 import { z } from "zod";
 
 
@@ -43,7 +43,7 @@ export const agendamentoFuncionarioSchema = z.object({
   local_doacao,
   obs,
 });
-// schema do doador
+
 export const agendamentoDoadorSchema = z.object({
   data_agendamento,
   horario,

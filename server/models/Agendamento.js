@@ -1,4 +1,4 @@
-// src/models/Agendamento.js
+
 import { DataTypes } from "sequelize";
 import { sequelize } from "../db.js";
 import Funcionario from "./Funcionario.js";
@@ -23,6 +23,8 @@ const Agendamento = sequelize.define('Agendamento', {
   estado: { type: DataTypes.STRING, defaultValue: 'pendente' }
 }, { tableName: 'agendamentos', timestamps: false });
 
+
+// Relacionamentos 
 Funcionario.hasMany(Agendamento, { foreignKey: 'id_funcionario' });
 Agendamento.belongsTo(Funcionario, { foreignKey: 'id_funcionario' });
 

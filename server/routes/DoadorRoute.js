@@ -1,14 +1,18 @@
 import express from "express";
 
-import { verificarToken } from "../middleware/verificarToken.js";
-import { listarDoadores,historicoDoacoes,getPerfilDoador} from "../controllers/DoadorController.js";
+import { verifyToken } from "../middleware/verifyToken.js";
+import { RegistarDoador,ListarDoadores,PerfilDoador,AtualizarFotoDoador,AtualizarDadosDoador,AtualizarPalavrapasse} from "../controllers/DoadorController.js";
+import { upload } from "../middleware/uploadConfig.js";
 
 
 const router = express.Router();
 
-
-router.get("/perfil", verificarToken , getPerfilDoador);
-router.get("/gerir_doadores", listarDoadores)
-router.get("/historico_doacoes", verificarToken,historicoDoacoes)
+//rotas do doador
+router.post('/', RegistarDoador);
+router.get('/meu-perfil', verifyToken , PerfilDoador);
+router.get('/', ListarDoadores)
+router.post('/meu-perfil/foto',verifyToken,upload.single("foto"),AtualizarFotoDoador);
+router.put('/',verifyToken,AtualizarDadosDoador);
+router.put('/palavra-passe',verifyToken,AtualizarPalavrapasse);
 
 export default router;

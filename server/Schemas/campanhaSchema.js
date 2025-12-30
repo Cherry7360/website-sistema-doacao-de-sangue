@@ -19,7 +19,6 @@ export const campanhaSchema = z.object({
 
   foto: z
     .string()
-    .url("A foto deve ser um link válido.")
     .optional()
    ,
 

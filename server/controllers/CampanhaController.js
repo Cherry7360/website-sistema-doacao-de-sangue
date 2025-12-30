@@ -6,14 +6,22 @@ import { campanhaSchema } from '../Schemas/campanhaSchema.js';
 
 import fs from 'fs';
 import path from 'path';
+
 const UPLOADS_DIR = path.join(process.cwd(), 'uploads/fotos');
 
-export const criarCampanha = async (req, res) => {
+/*
+Cria uma nova campanha com foto opcional e validação de dados com Zod.
+Valida dados e arquivo enviado; se houver erro, apaga foto órfã. Salva registo no modelo Campanha.
+ */
+
+export const CriarCampanha = async (req, res) => {
 
   const dadosComFoto = {
         ...req.body,
-       foto: req.file ? req.file.filename : undefined, 
-    };
+        foto: req.file ? `uploads/fotos/${req.file.filename}` : undefined,
+        id_funcionario: req.body.id_funcionario ? Number(req.body.id_funcionario) : undefined,
+        data_campanha: req.body.data_campanha, 
+      };
    const result = campanhaSchema.safeParse(dadosComFoto);
     if (!result.success) {
     if (req.file) {
@@ -59,11 +67,15 @@ export const criarCampanha = async (req, res) => {
   }
 };
 
-export const listarCampanhas = async (req, res) => {
+/*
+Lista todas as campanhas com informações do funcionário responsável.
+Ordena por data; inclui relação com Funcionario. 
+*/
+export const ListarCampanhas = async (req, res) => {
   try {
     const campanhas = await Campanha.findAll({
       order: [["data_campanha", "ASC"]],
-      include: ["Funcionario"] // opcional, se quiseres mostrar info do funcionário
+      include: ["Funcionario"]
     });
     res.json(campanhas);
   } catch (error) {
@@ -72,7 +84,11 @@ export const listarCampanhas = async (req, res) => {
   }
 };
 
-export const atualizarEstado = async (req, res) => {
+/*
+Atualiza o estado de uma campanha (ativa/inativa) e prepara notificações para todos os doadores.
+Valida funcionário logado e atualiza modelo Campanha; mapeia doadores para notificações.
+ */
+export const AtualizarEstadoCampanha = async (req, res) => {
   const { id } = req.params; 
   const { estado } = req.body; 
 
@@ -105,7 +121,8 @@ export const atualizarEstado = async (req, res) => {
   }
 };
 
-export const removerCampanha = async (req, res) => {
+// Remove uma campanha específica pelo ID.
+export const RemoverCampanha = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -120,7 +137,8 @@ export const removerCampanha = async (req, res) => {
   }
 };
 
-export const verCampanhas= async(req,res)=>{
+// Lista apenas campanhas ativas.
+export const VerCampanhas= async(req,res)=>{
     try {
     const campanhas = await Campanha.findAll({
       where: { estado: true }, // só campanhas ativas
