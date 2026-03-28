@@ -39,7 +39,7 @@ export const CriarCampanha = async (req, res) => {
     }
 
   try {
-    const { descricao, data_campanha,local, estado, horario, foto, id_funcionario } = result.data;
+    const { descricao, titulo,data_campanha,local, estado, horario, foto, id_funcionario } = result.data;
      
      console.log("req.body:", req.body);  
     console.log("req.file:", req.file); 
@@ -47,6 +47,7 @@ export const CriarCampanha = async (req, res) => {
     const campanha = await Campanha.create({
       descricao,
       data_campanha,
+      titulo,
       horario,
       foto,
       estado,

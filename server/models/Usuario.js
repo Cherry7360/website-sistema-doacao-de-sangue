@@ -23,7 +23,11 @@ import { sequelize } from '../db.js';
   email: DataTypes.STRING,
   telefone: DataTypes.STRING,
   tipo_usuario: DataTypes.STRING,
-  foto: DataTypes.STRING
+  foto: DataTypes.STRING,
+   genero: {
+    type: DataTypes.ENUM('Masculino', 'Feminino'),
+    allowNull: false
+  }
 }, {
   tableName: 'usuarios',
   timestamps: false

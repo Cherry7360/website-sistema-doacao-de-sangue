@@ -34,6 +34,28 @@ export const CriarAgendamentoDoador = async (req, res) => {
       return res.status(404).json({ message: "Doador não encontrado." });
     }
 
+ const ultimoAgendamento = await Agendamento.findOne({
+      where: { id_doador: doador.id_doador },
+      order: [["data_agendamento", "DESC"]],
+    });
+
+
+    if (ultimoAgendamento) {
+      const ultimaData = new Date(ultimoAgendamento.data_agendamento);
+      const novaData = new Date(data_agendamento);
+
+      // Definir intervalo permitido
+      const intervaloMeses = doador.sexo === "Feminino" ? 4 : 3;
+      const dataMinima = new Date(ultimaData);
+      dataMinima.setMonth(dataMinima.getMonth() + intervaloMeses);
+
+      if (novaData < dataMinima) {
+        return res.status(400).json({
+          message: `Não é possível agendar. O intervalo mínimo desde o último agendamento é de ${intervaloMeses} meses.`,
+        });
+      }
+    }
+
     const novoAgendamento = await Agendamento.create({
       id_doador: doador.id_doador,
       id_funcionario: null,
@@ -51,6 +73,7 @@ export const CriarAgendamentoDoador = async (req, res) => {
     const { titulo, mensagem } = gerarMensagemNotificacao("novo_agendamento", {
       tipoDestinatario: "funcionario",
       data_agendamento,
+
       horario,
       local_doacao,
     });
@@ -60,6 +83,7 @@ export const CriarAgendamentoDoador = async (req, res) => {
       await Notificacao.create({
         id_funcionario: func.id_funcionario,
         id_doador: doador.id_doador,
+        id_agendamento: novoAgendamento.id_agendamento,
         titulo,
         mensagem,
         tipo: "novo_agendamento",
@@ -107,6 +131,8 @@ export const CriarAgendamento = async (req, res) => {
       return res.status(404).json({ message: "Funcionário não encontrado." });
     }
 
+  
+  
     const novoAgendamento = await Agendamento.create({
       id_doador,
       id_funcionario:funcionario.id_funcionario,
@@ -114,15 +140,19 @@ export const CriarAgendamento = async (req, res) => {
       horario,
       local_doacao,
       obs,
-      estado: "aguardando_resposta", 
+      estado: "Aguardando_resposta", 
     });
 
-  const { titulo, mensagem } = gerarMensagemNotificacao("novo_agendamento", {
-   tipoDestinatario: "doador", 
-    data_agendamento,
-  horario,
-  local_doacao
-});
+    const { titulo, mensagem } = gerarMensagemNotificacao("novo_agendamento", {
+      tipoDestinatario: "doador", 
+      data_agendamento,
+      horario,
+      local_doacao
+      });
+
+      const DataAtual = new Date();
+      const horaAtual = `${DataAtual.getHours().toString().padStart(2,'0')}:${DataAtual.getMinutes().toString().padStart(2,'0')}:${DataAtual.getSeconds().toString().padStart(2,'0')}`;
+
 
    const novaNotificacao= await Notificacao.create({
       id_funcionario: funcionario.id_funcionario,
@@ -131,10 +161,12 @@ export const CriarAgendamento = async (req, res) => {
       mensagem,
       tipo: "novo_agendamento",
       visto: false,
-      data_envio: new Date(),
+      data_envio: DataAtual,
+      hora_envio:horaAtual,
     });
+
     console.log("Notificação criada:", novaNotificacao.toJSON());
-console.log("Mensagem de notificação:", titulo, mensagem);
+  console.log("Mensagem de notificação:", titulo, mensagem);
 
     res.status(201).json({
       message: "Agendamento criado com sucesso. ",
@@ -210,8 +242,8 @@ export const AtualizarEstadoAgendamento = async (req, res) => {
 
    
     let tipoNotificacao;
-    if (estado === "aceite") tipoNotificacao = "agendamento_aceite";
-    else if (estado === "rejeitado") tipoNotificacao = "agendamento_recusado";
+    if (estado === "Confirmado") tipoNotificacao = "agendamento_aceite";
+    else if (estado === "Recusado") tipoNotificacao = "agendamento_recusado";
     else tipoNotificacao = "atualizacao_agendamento";
 
   
@@ -222,9 +254,9 @@ export const AtualizarEstadoAgendamento = async (req, res) => {
       horario:agendamento.horario,
     });
 
-    const now = new Date();
-    const dataEnvio = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
-  const horaAtual = now.toTimeString().slice(0,5); 
+    const dataAtual = new Date();
+    const dataEnvio = new Date(dataAtual.getTime() - dataAtual.getTimezoneOffset() * 60000);
+  const horaAtual = dataAtual.toTimeString().slice(0,5); 
 
   console.log("hora:", dataEnvio)
     await Notificacao.create({

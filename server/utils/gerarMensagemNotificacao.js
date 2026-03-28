@@ -37,6 +37,17 @@ export function gerarMensagemNotificacao(tipo, dados = {}) {
         mensagem: `Uma nova campanha foi lançada em ${dados.local || "local não especificado"}! Data: ${dados.data || "brevemente"}.`,
       };
 
+       case "lembrete_doacao":
+     
+      let saudacao = "Lembrete";
+      if (dados.genero === "Feminino") saudacao = "Olá senhora";
+      else if (dados.genero === "Masculino") saudacao = "Olá senhor";
+
+      return {
+        titulo: "Lembrete de Doação",
+        mensagem: `${saudacao} ${dados.nome}, você tem uma doação amanhã às ${dados.horario} no local ${dados.local_doacao}.`,
+      };
+
     default:
       return {
         titulo: "Notificação",

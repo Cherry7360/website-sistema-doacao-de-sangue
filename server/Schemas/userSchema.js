@@ -1,5 +1,7 @@
  import { z } from "zod";
 
+ //Schemas de validação de agendamentos usando Zod.Uso: validação de formulários antes de enviar dados ao backend, garantindo consistência de tipos e regras de negócio.
+ 
  export const password= z.string()
     .length(7, "A palavra-passe deve ter exatamente 7 dígitos")
     .regex(/^\d{7}$/, "A palavra-passe deve conter apenas números")
@@ -10,10 +12,13 @@
  export const nome= z.string().min(10, "O nome deve ter pelo menos 20caracteres");
  export const  foto= z.string() .optional();
 export const cni = z.string().max(13,"informe o cni");
-
+export const genero=z.enum(["Masculino","Feminino"],{
+    required_error: "Informe seu género.",
+  })
  export const tipo_usuario= z.enum(["doador", "funcionario", "admin"], {
     errorMap: () => ({ message: "Tipo de utilizador inválido" }),
   })
+const tipo_sangue = z.string();
 
 export const AtualizarPalavraPasseShema = z.object({
   palavra_passe_atual: z
@@ -51,6 +56,34 @@ export const AtualizarDadosPerfil= z.object({
  telefone,email,profissao,morada,nome
 });
 
-export const registarfuncionarioSchema=z.object({
-nome,email,telefone,morada,tipo_usuario,cni
-})
+export const registarUserSchema = z
+  .object({
+    nome,
+    email,
+    telefone,
+    cni,
+    morada,
+    tipo_usuario,
+    
+   tipo_sangue: z.string().optional(),
+    profissao: z.string().optional(),
+    genero
+  })
+  .superRefine((data, ctx) => {
+    if (data.tipo_usuario === "doador") {
+      if (!data.tipo_sangue) {
+        ctx.addIssue({
+          path: ["tipo_sangue"],
+          message: "Tipo sanguíneo é obrigatório para doadores",
+          code: z.ZodIssueCode.custom,
+        });
+      }
+      if (!data.profissao) {
+        ctx.addIssue({
+          path: ["profissao"],
+          message: "Profissão é obrigatória para doadores",
+          code: z.ZodIssueCode.custom,
+        });
+      }
+    }
+  });

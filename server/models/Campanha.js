@@ -6,6 +6,10 @@ import  Funcionario  from "./Funcionario.js";
 const Campanha = sequelize.define('Campanha', {
     id_campanha: {type: DataTypes.INTEGER,
     autoIncrement: true, primaryKey: true,},
+     titulo: {
+    type: DataTypes.STRING(50),
+    allowNull: false,
+  },
   descricao: DataTypes.TEXT,
   data_campanha: DataTypes.DATEONLY,
   horario: DataTypes.TIME,

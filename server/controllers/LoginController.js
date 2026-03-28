@@ -37,7 +37,7 @@ export const loginUsuario = async (req, res) => {
     const token = jwt.sign(
       { id: usuario.id_usuario, tipo: usuario.tipo_usuario, codigo: usuario.codigo_usuario },
       JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '30m' }
     );
 
     res.json({ mensagem: 'Login com sucesso', token, tipo: usuario.tipo_usuario });

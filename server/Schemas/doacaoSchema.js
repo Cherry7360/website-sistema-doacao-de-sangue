@@ -14,6 +14,13 @@ export const estado = z.string({
   required_error: "O estado da doação é obrigatório"
 });
 
+export const id_agendamento = z.preprocess((val) => {
+  if (typeof val === "string") return Number(val);
+  return val;
+}, z.number({
+  required_error: "Informe o id do agendamento",
+  invalid_type_error: "ID do agendamento deve ser um número",
+}));
 
 
 export const data_doacao = z
@@ -25,9 +32,15 @@ export const data_doacao = z
     return diaSemana !== 0 && diaSemana !== 6;
   }, "data de doacao invalida",{required_error:" invalido"});
 
+
 export const doacaoSchema = z.object({
   id_doador,
-  estado, 
-  descricao,
-  data_doacao
+  id_agendamento,
+  data_doacao: z.string({
+    required_error: "Informe a data da doação",
+  }),
+  estado: z.enum(["Concluído", "Cancelado"], {
+    required_error: "Selecione o estado da doação",
+  }),
+  descricao: z.string().optional(),
 });

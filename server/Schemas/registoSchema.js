@@ -10,7 +10,10 @@ export const registoSchema = z.object({
   tipo_sangue: z.string().min(2, "Informe seu tipo sanguíneo"),
      peso: z.number().min(30, "Informe um peso válido").max(300, "Peso muito alto"),
   altura: z.number().min(50, "Informe uma altura válida").max(250, "Altura muito alta"),
+   genero:z.enum(["Masculino","Feminino"],{
+    required_error: "Informe seu género.",
+  }),
 
-  ultimaDoacao: z.string().min(10, "Informe a última doação").optional(), 
+
   doencas: z.string().min(1, "Informe doenças ou medicamentos"),
 });

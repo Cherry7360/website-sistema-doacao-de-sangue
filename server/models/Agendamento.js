@@ -2,7 +2,9 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../db.js";
 import Funcionario from "./Funcionario.js";
-import  Doador  from "./Doador.js";
+import  Doador from "./Doador.js";
+
+
 
 const Agendamento = sequelize.define('Agendamento', {
    id_agendamento: {
@@ -30,5 +32,7 @@ Agendamento.belongsTo(Funcionario, { foreignKey: 'id_funcionario' });
 
 Doador.hasMany(Agendamento, { foreignKey: 'id_doador' });
 Agendamento.belongsTo(Doador, { foreignKey: 'id_doador' });
+
+// confirmado, recusado, aguardando resposta e pendente
 
 export default Agendamento;

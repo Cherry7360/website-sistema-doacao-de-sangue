@@ -1,8 +1,11 @@
 import Notificacao from "../models/Notificacao.js";
 import Funcionario from "../models/Funcionario.js";
 import Doador from "../models/Doador.js";
-
-
+import Usuario from "../models/Usuario.js";
+import Agendamento from "../models/Agendamento.js"
+import { gerarMensagemNotificacao } from "../utils/gerarMensagemNotificacao.js";
+import { Op } from "sequelize";
+import { emailSender } from "../utils/emailSender.js";
 import { notificacaoSchema} from "../Schemas/notificacaoSchema.js"; 
 
 /* Lista todas as notificações de um doador específico.
@@ -87,7 +90,7 @@ export const ListarNotificacoesFuncionario = async (req, res) => {
 };
 
 /*Envia uma nova notificação de um funcionário para um doador.
- Valida dados com Zod, busca funcionario e doador, define data/hora de envio e cria registro no modelo Notificacao.
+ Valida dados com Zod, busca funcionario e doador, define data/hora de envio e cria registo no modelo Notificacao.
  */
 export const EnviarNotificacao = async (req, res) => {
   
@@ -133,5 +136,59 @@ export const EnviarNotificacao = async (req, res) => {
   } catch (err) {
     console.error("Erro ao enviar notificação:", err);
     res.status(500).json({ message: "Erro ao enviar notificação", error: err.message });
+  }
+};
+
+
+export const EnviarLembretesDoacao = async () => {
+  try {
+  
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    const amanha = new Date(hoje);
+    amanha.setDate(hoje.getDate() + 1);
+
+    const amanhaFim = new Date(amanha);
+    amanhaFim.setHours(23, 59, 59, 999);
+
+    // Buscar agendamentos confirmados para amanhã
+    const agendamentos = await Agendamento.findAll({
+      where: {
+        estado: "Confirmado",
+        data_agendamento: {
+          [Op.between]: [amanha, amanhaFim]
+        }
+      },
+      include: [
+        {
+          model: Doador,
+          include: [
+            {
+              model: Usuario,
+              attributes: ["nome", "email", "genero"]
+            }
+          ]
+        }
+      ]
+    });
+
+    for (const ag of agendamentos) {
+      const usuario = ag.Doador?.Usuario;
+      if (!usuario?.email) continue;
+
+      const { titulo, mensagem } = gerarMensagemNotificacao("lembrete_doacao", {
+        nome: usuario.nome,
+        genero: usuario.genero,
+        horario: ag.horario,
+        local_doacao: ag.local_doacao
+      });
+
+      await emailSender(usuario.email, titulo, mensagem);
+    }
+
+    console.log(`Lembretes enviados por email: ${agendamentos.length}`);
+  } catch (err) {
+    console.error("Erro ao enviar lembretes por email:", err);
   }
 };

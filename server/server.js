@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { sequelize } from './db.js';
+import "./utils/cronLembrete.js";
 
 import loginRoute from './routes/LoginRoute.js';
 import doadorRoutes from './routes/DoadorRoute.js';

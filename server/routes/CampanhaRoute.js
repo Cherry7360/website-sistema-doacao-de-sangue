@@ -1,5 +1,5 @@
 import express from "express";
-import { CriarCampanha,VerCampanhas, ListarCampanhas,AtualizarEstadoCampanha,RemoverCampanha } from "../controllers/CampanhaController.js";
+import { CriarCampanha,VerCampanhas, ListarCampanhas,AtualizarEstadoCampanha,RemoverCampanha  } from "../controllers/CampanhaController.js";
 import {verifyToken} from "../middleware/verifyToken.js";
 import { upload } from "../middleware/uploadConfig.js";
 

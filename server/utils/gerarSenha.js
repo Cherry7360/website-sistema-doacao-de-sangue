@@ -9,5 +9,12 @@ export function gerar7Digitos() {
 // Função para gerar hash da palavra passe
 export async function gerarHash(senha) {
   const hash = await bcrypt.hash(senha, 10);
+  console.log("Senha gerada:", senha);
+  console.log("Hash correspondente:", hash);
   return hash;
 }
+
+(async () => {
+  const senha = gerar7Digitos();
+  await gerarHash(senha);
+})();

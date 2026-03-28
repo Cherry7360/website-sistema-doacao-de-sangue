@@ -9,7 +9,7 @@ import {AtualizarFotoPerfil,AtualizarDadosPerfil, AtualizarPalavraPasseShema } f
 const UPLOADS_DIR = path.join(process.cwd(), 'uploads/fotos');
 
 import { gerar7Digitos, gerarHash } from "../utils/gerarSenha.js";
-import { sendEmail } from "../utils/emailSender.js";
+import { emailSender } from "../utils/emailSender.js";
 import { sequelize } from "../db.js";
 import { registoSchema} from "../Schemas/registoSchema.js"; 
 
@@ -38,13 +38,8 @@ if (!result.success) {
 }
 
   try {
-    const { nome, morada, cni, email, telefone, tipo_sangue, profissao } = result.data;
+    const { nome, morada, cni, email, telefone, tipo_sangue, profissao,genero} = result.data;
 
-    if (!nome || !email || !telefone || !cni || !morada || !tipo_sangue || !profissao) {
-      return res.status(400).json({ message: "Todos os campos obrigatórios devem ser preenchidos." });
-    }
-
-   
     const existe = await Usuario.findOne({ where: { email } });
     if (existe) {
       return res.status(400).json({ message: "Já existe um utilizador registado com este email." });
@@ -53,6 +48,8 @@ if (!result.success) {
     const codigo_usuario = await gerarCodigoUsuario();
     const senhaTemporaria = gerar7Digitos();
     const hashSenha = await gerarHash(senhaTemporaria);
+    const fotoDefault = "uploads/fotos/default_user.png";
+
 
     const novoUsuario = await Usuario.create(
       {
@@ -64,6 +61,8 @@ if (!result.success) {
         email,
         telefone,
         tipo_usuario: "doador",
+        genero,
+         foto: fotoDefault
       },
       { transaction }
     );
@@ -74,6 +73,7 @@ if (!result.success) {
         codigo_usuario,
         tipo_sangue,
         profissao,
+       
       },
       { transaction }
     );
@@ -97,11 +97,11 @@ if (!result.success) {
    
     await transaction.commit();
     try {
-  await sendEmail(email, subject, text);
-} catch (emailError) {
-  console.error("Falha ao enviar email:", emailError);
+      await emailSender(email, subject, text);
+    } catch (emailError) {
+      console.error("Falha ao enviar email:", emailError);
 
-}
+    }
 
     res.status(201).json({
       message: "Doador registrado e email enviado com sucesso!",
@@ -150,7 +150,7 @@ Consulta Doador com atributos essenciais, inclui dados do Usuario e ordena por i
 export const ListarDoadores = async (req, res) => {
   try {
     const doadores = await Doador.findAll({
-      attributes: ["id_doador", "tipo_sangue", "profissao", "data_ultima_doacao"],
+      attributes: ["id_doador", "tipo_sangue", "profissao"],
       include: [
         {
           model: Usuario,
