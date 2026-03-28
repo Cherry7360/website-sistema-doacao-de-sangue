@@ -5,18 +5,22 @@ import Input from "../../components/Input";
 import Select from "../../components/Select";
 import Textarea from "../../components/Textarea";
 import Button from "../../components/Button";
+import AlertCard from "../../components/AlertCard";
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { agendamentoFuncionarioSchema } from "../../validations/agendamentoSchema.js";
-import {  HiOutlinePlus  } from "react-icons/hi";
+import { HiOutlinePlus,HiSearch } from "react-icons/hi";
 
-const base = "http://localhost:5080/agendamentos"; 
+const BASE_URL = "http://localhost:5080/agendamentos";
 
 
 const AgendamentoFuncionario = () => {
-  const [search, setSearch] = useState("");
-  const [agendamentos, setAgendamentos] = useState([]);
-  const [mostrar, setMostrar] = useState(false);
+  const [search, setSearch] = useState(""); 
+  const [agendamentos, setAgendamentos] = useState([]); 
+  const [mostrar, setMostrar] = useState(false); 
+  const [alert, setAlert] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const token = localStorage.getItem("token");
 
@@ -24,56 +28,71 @@ const AgendamentoFuncionario = () => {
     resolver: zodResolver(agendamentoFuncionarioSchema),
   });
 
+
   useEffect(() => {
     fetchAgendamentos();
   }, []);
 
+  // Função para buscar todos os agendamentos
   const fetchAgendamentos = async () => {
     try {
-      const res = await axios.get(`${base}/gerir_agendamentos`, {
+      const res = await axios.get(`${BASE_URL}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setAgendamentos(res.data);
     } catch (err) {
       console.error("Erro ao carregar agendamentos:", err);
-    }
+    } finally {
+    setLoading(false); 
+  }
   };
 
-  const onSubmit = async (data) => {
-    try {
-      await axios.post(`${base}/gerir_agendamentos`, data, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      fetchAgendamentos();
-      setMostrar(false);
-      reset();
-    } catch (err) {
-      console.error("Erro ao criar agendamento:", err);
-    }
-  };
+  // Criação de novo agendamento
+const onSubmit = async (data) => {
+  try {
+    await axios.post(`${BASE_URL}`, data, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    fetchAgendamentos();
+    setMostrar(false);
+    reset();
+    setAlert({ type: "success", message: "Agendamento criado com sucesso!" });
+  } catch (err) {
+    console.error("Erro ao criar agendamento:", err);
+    setAlert({ type: "error", message: "Erro ao criar agendamento." });
+  }
+};
 
-  const handleEstado = async (id_agendamento, estado) => {
-    try {
-      await axios.put(`${base}/gerir_agendamentos`, { id_agendamento, estado }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      fetchAgendamentos();
-    } catch (err) {
-      console.error("Erro ao atualizar estado:", err);
-    }
-  };
+  // Alterar estado do agendamento (confirmado/recusado)
+ const handleEstado = async (id_agendamento, estado) => {
+  try {
+    await axios.put(`${BASE_URL}`, { id_agendamento, estado }, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    fetchAgendamentos();
+    setAlert({ type: "success", message: `Agendamento ${estado} com sucesso!` });
+  } catch (err) {
+    console.error("Erro ao atualizar estado:", err);
+    setAlert({ type: "error", message: "Erro ao registar usuário." });
+  }
+};
 
+  // Remover agendamento
   const handleRemover = async (id) => {
     try {
-      await axios.delete(`${base}/gerir_agendamentos/${id}`, {
+      await axios.delete(`${BASE_URL}/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchAgendamentos();
+      setAlert({ type: "success", message: "Agendamento removido com sucesso!" });
     } catch (err) {
       console.error("Erro ao remover agendamento:", err);
+      setAlert({ type: "error", message: "Não é possível remover este agendamento, pois existem doações associadas a ele." });
     }
   };
 
+
+  // Filtrar agendamentos pela busca
   const agendamentosFiltradas = agendamentos.filter((d) => {
     const termo = search.toLowerCase();
     const nomeDoador = d.Doador?.Usuario?.nome?.toLowerCase() || "";
@@ -81,148 +100,175 @@ const AgendamentoFuncionario = () => {
     return nomeDoador.includes(termo) || idDoador.includes(termo);
   });
 
+    const isHoje = (data) => {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    const d = new Date(data);
+    d.setHours(0, 0, 0, 0);
+
+    return d.getTime() === hoje.getTime();
+  };
+
+
   return (
- <div>
-    <div className="p-6 w-full mx-auto">
-      
-      <div className="flex justify-between items-center mb-6 flex-wrap gap-3"> {/* Aumentei mb-4 para mb-6 para mais espaço */}
-        <h2 className="text-2xl font-semibold text-gray-800">Lista de agendamentos</h2> {/* Aumentei o tamanho do texto para 2xl */}
+<div className="p-6 flex flex-col h-full">
 
-        <Button
-          onClick={() => setMostrar(true)}
-         className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition duration-150"
-        >
-          < HiOutlinePlus  size={18} />
-          Adicionar
-        </Button>
-      </div>
+  <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
+    <h2 className="text-xl font-bold">Lista de agendamentos</h2>
+    <Button
+      onClick={() => setMostrar(true)}
+      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+    >
+      <HiOutlinePlus size={18} /> Adicionar
+    </Button>
+  </div>
 
-   
-      <Input
-        type="text"
-        placeholder="Pesquisar pelo doador..." 
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="mb-6 w-full border border-gray-300 p-2 rounded-lg" 
+  {/* Barra de pesquisa fixa */}
+  <div className="relative mb-4">
+    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+      <HiSearch/>
+    </span>
+
+    <Input
+      type="text"
+      placeholder="Pesquisar"
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+      className="pl-10 w-full border border-gray-300 rounded-lg"
+    />
+  </div>
+
+  {alert && (
+    <div className="fixed top-5 right-5 z-50">
+      <AlertCard
+        type={alert.type}
+        message={alert.message}
+        onClose={() => setAlert(null)}
       />
+    </div>
+  )}
 
-      <div className="relative w-full overflow-x-auto shadow-xl rounded-xl border border-gray-200"> 
-        <table className="w-full text-sm text-left text-gray-700"> 
-          <thead className="bg-gray-100 text-gray-600 uppercase text-xs tracking-wider">
-            <tr>
-           
-              <th className="px-4 py-3 border-b text-left">Doador</th>
-              <th className="px-4 py-3 border-b text-center">Data</th>
-              <th className="px-4 py-3 border-b text-center">Horário</th>
-              <th className="px-4 py-3 border-b text-left">Local</th>
-              <th className="px-4 py-3 border-b text-left">Obs</th>
-              <th className="px-4 py-3 border-b text-center">Estado</th>
-              <th className="px-4 py-3 border-b text-center">Ações</th>
-            </tr>
-          </thead>
 
-          <tbody>
-            {agendamentosFiltradas.map((ag) => (
-              <tr
-                key={ag.id_agendamento}
-              
-                className="bg-white border-b hover:bg-red-50/50 transition duration-150"
-              >
-               
-                <td className="px-4 py-4 font-medium text-gray-900 text-left">
-                  {ag.Doador?.Usuario?.nome}
-                </td>
-                
-                <td className="px-4 py-4 text-center">
-                  {ag.data_agendamento}
-                </td>
-                <td className="px-4 py-4 text-center">{ag.horario}</td>
-                
-                <td className="px-4 py-4 text-left">{ag.local_doacao}</td>
-                
-                <td className="px-4 py-4 text-left">{ag.obs || "-"}</td>
+  {/* Corpo da tabela rolável */}
+  {loading ? (
+    <div className="flex flex-col items-center justify-center h-screen text-center space-y-3">
+      <h4 className="text-4xl font-bold mb-4">Carregando ...</h4>
+    </div>
+  ) : agendamentosFiltradas.length === 0 ? (
+    <div className="flex flex-col items-center justify-center h-64 text-center">
+      <h4 className="text-2xl font-bold">Nenhum Agendamento encontrada</h4>
+    </div>
+  ) : (
 
-                <td className="px-4 py-4 text-center">
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-bold whitespace-nowrap ${
-                      ag.estado === "pendente"
-                        ? "bg-yellow-100 text-yellow-700"
-                        : ag.estado === "aceite"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
-                  >
-                    {ag.estado.toUpperCase()} 
-                        </span>
-                </td>
-               <td className="px-4 py-4 flex flex-wrap gap-2 justify-center">
-                  {ag.estado === "pendente" && (
-                    <>
-                    bg-red-500 text-white px-2 py-1 rounded hover:bg-red-700"
-                      <Button
-                        className="bg-green-700 text-white  px-2 py-1 rounded"
-                        onClick={() => handleEstado(ag.id_agendamento, "aceite")}
-                      >
-                        Aceitar
-                      </Button>
+  <div className="relative w-full overflow-y-auto max-h-[500px] shadow-xl rounded-xl border border-gray-200">
+    <table className="w-full text-sm text-left text-gray-700">
+      <thead className="bg-gray-100 text-gray-600 uppercase text-xs tracking-wider sticky top-0 z-20">
+        <tr>
+          <th className="px-4 py-3 border-b text-left">Doador</th>
+          <th className="px-4 py-3 border-b text-center">Data</th>
+          <th className="px-4 py-3 border-b text-center">Horário</th>
+          <th className="px-4 py-3 border-b text-left">Local</th>
+          <th className="px-4 py-3 border-b text-left">Obs</th>
+          <th className="px-4 py-3 border-b text-center">Estado</th>
+          <th className="px-4 py-3 border-b text-center">Ações</th>
+        </tr>
+      </thead>
 
-                      <Button
-                        className=" bg-red-700 text-white  px-2 py-1 rounded"
-                        onClick={() => handleEstado(ag.id_agendamento, "rejeitado")}
-                      >
-                        Rejeitar
-                      </Button>
-                    </>
-                  )}
-
+      <tbody>
+      {agendamentosFiltradas.map(ag=> (
+             <tr
+              key={ag.id_agendamento}
+              className={`
+                border-b transition duration-150
+                ${isHoje(ag.data_agendamento)
+                  ? "bg-green-50 hover:bg-green-100"
+                  : "bg-white hover:bg-red-50/50"}
+              `}
+            >
+              <td className="px-4 py-4 font-medium text-gray-900 text-left">{ag.Doador?.Usuario?.nome}</td>
+              <td className="px-4 py-4 text-center">{ag.data_agendamento}</td>
+              <td className="px-4 py-4 text-center">{ag.horario}</td>
+              <td className="px-4 py-4 text-left">{ag.local_doacao}</td>
+              <td className="px-4 py-4 text-left">{ag.obs || "-"}</td>
+              <td className="px-4 py-4 text-center">
+                <span
+                  className={`px-2 py-1 rounded-full text-xs font-bold whitespace-nowrap ${
+                    ag.estado === "Pendente"
+                      ? "bg-yellow-100 text-yellow-700"
+                      : ag.estado === "Aguardando_resposta"
+                      ? "bg-orange-100 text-orange-700"
+                      : ag.estado === "Confirmado"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  {ag.estado.toUpperCase()} 
+                </span>
+              </td>
+              <td className="px-4 py-4 flex flex-wrap gap-2 justify-center">
+                {ag.estado === "pendente" && (
+                  <>
+                    <Button
+                      className="bg-green-700 text-white px-2 py-1 rounded"
+                      onClick={() => handleEstado(ag.id_agendamento, "Confirmado")}
+                    >
+                      Confirmar
+                    </Button>
+                    <Button
+                      className="bg-red-500 text-white px-2 py-1 rounded"
+                      onClick={() => handleEstado(ag.id_agendamento, "Recusado")}
+                    >
+                      Recusar
+                    </Button>
+                  </>
+                )}
+                {ag.estado === "aguardando_resposta" && (
                   <Button
-                    className="bg-red-400 hover:bg-red-500 text-white px-2 py-1 rounded"
+                    className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
                     onClick={() => handleRemover(ag.id_agendamento)}
                   >
                     Remover
                   </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+                )}
+                {ag.estado !== "Pendente" && ag.estado !== "Aguardando_resposta" && (
+                  <Button
+                    className="bg-red-500 hover:bg-red-400 text-white px-2 py-1 rounded"
+                    onClick={() => handleRemover(ag.id_agendamento)}
+                  >
+                    Remover
+                  </Button>
+                )}
+              </td>
+            </tr>
+      ))}
+      </tbody>
+    </table>
+  </div>
+)}
+{mostrar && ( 
+  <Modal mostrar={mostrar} fechar={() => setMostrar(false)} titulo="Novo Agendamento"> 
+  <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-5 m-12"> <div className="grid grid-cols-2 gap-4"> 
+    <div> 
+      <Input {...register("id_doador")} label="ID do Doador" placeholder="123"/> {errors.id_doador && <p className="text-red-600 text-sm mt-1">{errors.id_doador.message}</p>}
+       </div> 
+       <div>
+         <Input {...register("data_agendamento")} label="Data" type="date" placeholder="11/01/2026"/> 
+         {errors.data_agendamento && <p className="text-red-600 text-sm mt-1">{errors.data_agendamento.message}</p>} 
+         </div> 
+         <div> <Input {...register("horario")} type="time" label="Hora" placeholder="09:00" /> {errors.horario && <p className="text-red-600 text-sm mt-1">{errors.horario.message}</p>} </div>
+          <div> <Select {...register("local_doacao")} label="Local"> <option value="">Selecionar local</option> <option value="Hospital Regional Santiago Norte">Hospital Regional Santiago Norte</option> 
+          <option value="Hospital HBS">Hospital HBS</option> 
+          </Select> {errors.local_doacao && <p className="text-red-600 text-sm mt-1">{errors.local_doacao.message}</p>} 
+          </div>
+           </div> 
+           
+           <div> <Textarea {...register("obs")} label="Observações" /> </div> 
+           <Button type="submit" className=" bg-green-600 mt-4 py-2 px-6 text-white font-semibold transition duration-150 rounded-md max-w-xs mx-auto block" > Confirmar </Button> 
+           </form>
+            </Modal>)}
+</div>
 
-
-
-
-      {mostrar && (
-        <Modal mostrar={mostrar} fechar={() => setMostrar(false)} titulo="Novo Agendamento">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 w-full max-w-2xl mx-auto"
->
-             <div className="border border-gray-100 rounded-lg p-5 space-y-4">
-            <Input {...register("id_doador")} placeholder="ID do Doador" />
-            {errors.id_doador && <p className="text-red-600">{errors.id_doador.message}</p>}
-
-            <Input {...register("data_agendamento")} type="date" />
-            {errors.data_agendamento && <p className="text-red-600">{errors.data_agendamento.message}</p>}
-
-            <Input {...register("horario")} type="time" />
-            {errors.horario && <p className="text-red-600">{errors.horario.message}</p>}
-
-            <Select {...register("local_doacao")}>
-              <option value="">Selecionar local</option>
-              <option value="Hospital Regional Santiago Norte">Hospital Regional Santiago Norte</option>
-              <option value="Hospital HBS">Hospital HBS</option>
-            </Select>
-            {errors.local_doacao && <p className="text-red-600">{errors.local_doacao.message}</p>}
-
-            <Textarea {...register("obs")} placeholder="Observações" />
-            </div>
-            <Button type="submit" className="bg-green-600">
-              Salvar
-            </Button>
-
-          </form>
-        </Modal>
-      )}
-    </div>
   );
 };
 

@@ -1,9 +1,14 @@
 import { z } from "zod";
+//Schemas de validação de agendamentos usando Zod.Uso: validação de formulários antes de enviar dados ao backend, garantindo consistência de tipos e regras de negócio.
 
 export const campanhaSchema = z.object({
   descricao: z
     .string({ required_error: "A descrição é obrigatória." })
     .min(5, "A descrição deve ter pelo menos 5 caracteres."),
+   
+  titulo: z
+    .string({ required_error: "O titulo é obrigatória." })
+    .min(10, "A descrição deve ter pelo menos 5 caracteres."),
    
 
   data_campanha: z
@@ -20,7 +25,6 @@ export const campanhaSchema = z.object({
 
   foto: z
     .string()
-    .url("A foto deve ser um link válido.")
     .optional(),
 
   id_funcionario: z.preprocess((val) => {

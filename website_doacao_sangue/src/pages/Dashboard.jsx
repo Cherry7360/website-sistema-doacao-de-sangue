@@ -1,71 +1,179 @@
-import { HiOutlineUsers, HiOutlineHeart, HiOutlineSpeakerphone, HiOutlineCalendar } from "react-icons/hi";
-
+import {HiTrendingUp, HiOutlineUsers, HiOutlineHeart, HiOutlineSpeakerphone, HiClock,HiOutlineViewGrid } from "react-icons/hi";
 import { useEffect, useState } from "react";
+import Grafico from "../components/Grafico";
+import GraficoCircular from "../components/GraficoCircular";
+
+import GotaNivel from "../components/GotaNivel";
 import axios from "axios";
 
-const base = "http://localhost:5080/dash";
+const BASE_URL  = "http://localhost:5080/dashboard";
+const MAX_DOACOES = 20;
 
 const Dashboard = () => {
+
+ 
   const [dados, setDados] = useState({
     totalDoadores: 0,
     totalDoacoes: 0,
+    totalFuncionarios: 0,
     campanhasAtivas: 0,
-    agendamentosHoje: 0,
-  });
 
-  const [infoDash, setInfoDash] = useState(null);
+  });
+   const [doacoes, setDoacoes] = useState([]);
+  const [campanhas, setCampanhas] = useState([]);
+  const [agendamentosHoje, setAgendamentosHoje] = useState([]);
+  const [doadores, setDoadores] = useState([]);
+const [estoqueSangue, setEstoqueSangue] = useState([]);
+
 
   useEffect(() => {
     fetchDashboard();
   }, []);
 
+
+  // Função que busca os dados agregados para o dashboard
   const fetchDashboard = async () => {
     try {
-      const res = await axios.get(base);
+      const res = await axios.get(BASE_URL );
+        const masculino = res.data.Totalmasculino;
+    const feminino  = res.data.Totalfeminino;
       setDados({
         totalDoadores: res.data.totalDoadores,
-        totalDoacoes: res.data.totalDoacoes,
-        campanhasAtivas: res.data.campanhasAtivas,
-        agendamentosHoje: res.data.agendamentosHoje,
+        totalFuncionarios: res.data.totalFuncionarios,
       });
-      setInfoDash(res.data.infoExtra || null);
-      console.log("Dashboard carregado.");
+      setDoacoes(res.data.doacoesPorAno || []);
+      setCampanhas(res.data.campanhasPorAno || []);
+      setDoadores([
+      { name: "Masculino", value: masculino },
+      { name: "Feminino", value: feminino },
+        ]);
+
+        console.log(res.data.estoqueSangue);
+        setEstoqueSangue(res.data.estoqueSangue || []);
     } catch (err) {
-      console.error("Erro ao carregar dados do dashboard", err);
+      console.error("Erro ao carregar dados do dashboard:", err);
     }
   };
 
-  const cards = [
-    { title: "Total de Doadores", value: dados.totalDoadores, icon: <HiOutlineUsers size={28} className="text-white" />, bg: "bg-blue-500" },
-    { title: "Total de Doações", value: dados.totalDoacoes, icon: <HiOutlineHeart size={28} className="text-white" />, bg: "bg-red-500" },
-    { title: "Campanhas Ativas", value: dados.campanhasAtivas, icon: <HiOutlineSpeakerphone size={28} className="text-white" />, bg: "bg-yellow-500" },
-    { title: "Agendamentos pendentes Hoje", value: dados.agendamentosHoje, icon: <HiOutlineCalendar size={28} className="text-white" />, bg: "bg-green-500" },
-  ];
+  const estoqueConvertido = estoqueSangue.map(item => ({
+  tipo: item.tipo,
+  nivel: Math.min(Math.round((item.total / MAX_DOACOES) * 100), 100),
+}));
+  const Cards=({accentColor,
+      icon,
+      iconBg = "bg-gray-100",
+      iconColor = "text-gray-600",
+      title,
+      value,
+      subtitle,
+      highlight
+    }) => (  <div
+        className={`relative bg-white rounded-xl shadow-sm p-6 flex gap-4 
+        ${highlight ? "ring-2 ring-red-500" : ""}`}
+      >
+        <span className={`absolute left-0 top-0 h-full w-1 rounded-l-xl ${accentColor}`} />
+        <div
+          className={`flex items-center justify-center w-12 h-12 rounded-full ${iconBg}`}>
+          <span className={`text-xl ${iconColor}`}>
+            {icon}
+          </span>
+        </div>
+
+        <div>
+          <p className="text-sm text-gray-500">{title}</p>
+          <p className="text-2xl font-bold text-gray-800">{value}</p>
+          {subtitle && (
+            <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
+          )}
+        </div>
+  </div>)
+
+    // Combinar doacoesPorAno e campanhasPorAno
+    const combinarPorAno = () => {
+      const anos = new Set([
+        ...doacoes.map(d => d.ano),
+        ...campanhas.map(c => c.ano),
+      ]);
+
+      const resultado = Array.from(anos).map(ano => {
+        const doacoesAno = doacoes.find(d => d.ano === ano);
+        const campanhasAno = campanhas.find(c => c.ano === ano);
+        return {
+          ano,
+          doacoes: doacoesAno ? doacoesAno.total : 0,
+          campanhas: campanhasAno ? campanhasAno.total : 0,
+        };
+      });
+
+      return resultado.sort((a, b) => a.ano - b.ano);
+      
+    };
+
+
+    const formatDateLocal = (dateStr) => {
+      if (!dateStr) return "—";
+      const [year, month, day] = dateStr.split("-"); // separa ano-mês-dia
+      const date = new Date(year, month - 1, day); // constrói data local
+      return date.toLocaleDateString("pt-PT", { day: "2-digit", month: "2-digit", year: "numeric" });
+    };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+    <div className="px-4 lg:px-16 py-6 bg-gray-50 min-h-screen space-y-8">
 
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {cards.map((card, index) => (
-          <div 
-            key={index} 
-            className={`flex items-center p-6 rounded-xl shadow-lg ${card.bg} text-white transition-transform hover:scale-105`}
-          >
-            <div className="p-4 rounded-full bg-white/20 mr-4">
-              {card.icon}
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{card.value}</p>
-              <p className="text-sm opacity-80">{card.title}</p>
-            </div>
-          </div>
-        ))}
-      </div>
+  <div className="flex items-center gap-2 mb-4">
+    <HiOutlineViewGrid className="text-2xl text-gray-700" />
+    <h1 className="text-2xl font-bold">Dashboard</h1>
+  </div>
 
-    
+
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 w-fit ">
+    <Cards
+      accentColor="bg-red-300"
+      icon={<HiOutlineUsers />}
+      iconBg="bg-red-200"
+      iconColor="text-red-600"
+      title="Total de doadores"
+      value={dados.totalDoadores || "—"}
+    />
+    <Cards
+      accentColor="bg-blue-300"
+      icon={<HiOutlineUsers />}
+      iconBg="bg-blue-200"
+      iconColor="text-blue-600"
+      title="Total de funcionários"
+      value={dados.totalFuncionarios || "—"}
+    />
+  </div>
+
+
+
+
+  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <div className="lg:col-span-8 bg-white p-6 rounded-xl shadow-sm">
+      <Grafico
+        dados={combinarPorAno()}
+        titulo="Doações e Campanhas por Ano"
+        xKey="ano"
+        barras={[
+                  { chave: "doacoes", cor: "#fca5a5" }, 
+                  { chave: "campanhas", cor: "#6ee7b7" },]}
+        altura={320}
+        icone={<HiTrendingUp />}
+      />
     </div>
+
+    <div className="lg:col-span-4 bg-white p-6 rounded-xl shadow-sm">
+      <GraficoCircular doadores={doadores} />
+    </div>
+  </div>
+
+
+
+
+
+
+</div>
+
   );
 };
 

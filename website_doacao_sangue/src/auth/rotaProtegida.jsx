@@ -1,9 +1,9 @@
-
-import { Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom'; 
 import { useAuth } from '../context/AuthContext';
 
-const RotaProtegida = ({ children,role }) => {
-  const { usuario,carregando } = useAuth();
+// Componente que protege rotas, permitindo acesso apenas a usuários autenticados e, opcionalmente, com uma role específica
+const RotaProtegida = ({ children, role }) => {
+  const { usuario, carregando } = useAuth();
  
   if (carregando) {
     return <div>Carregando...</div>; 
@@ -13,13 +13,11 @@ const RotaProtegida = ({ children,role }) => {
     return <Navigate to="/login" replace/>;
   }
 
-    if (role && usuario.role !== role) {
-      return <Navigate to="/nao-autorizado" replace />;
+  if (role && usuario.role !== role) {
+    return <Navigate to="/nao-autorizado" replace />;
   }
-
 
   return children;
 };
+
 export default RotaProtegida;
-
-

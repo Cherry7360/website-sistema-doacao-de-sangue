@@ -1,25 +1,17 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { FaCalendarAlt, FaTint, FaExclamationTriangle, FaCheckCircle, FaInfoCircle } from "react-icons/fa";
+import { HiBell, HiCheckCircle } from "react-icons/hi"; 
+import Button from "../../components/Button";
+import { useNavigate } from "react-router-dom";
 
-
-
-const base = "http://localhost:5080/notificacoes";
+const BASE_URL = "http://localhost:5080/notificacoes";
 
 const NotificacoesDoador = () => {
-
-const tiposNotificacao = {
-  agendamento: { nome: "Agendamento", icone: <FaCalendarAlt />, cor: "bg-blue-100" },
-  campanha: { nome: "Campanha", icone: <FaTint />, cor: "bg-red-100" },
-  urgente: { nome: "Urgente", icone: <FaExclamationTriangle />, cor: "bg-yellow-100" },
-  resposta: { nome: "Resposta", icone: <FaCheckCircle />, cor: "bg-green-100" },
-  geral: { nome: "Geral", icone: <FaInfoCircle />, cor: "bg-gray-100" },
-};
-
   const [notificacoes, setNotificacoes] = useState([]);
   const [erro, setErro] = useState("");
-
+  
   const token = localStorage.getItem("token");
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchNotificacoes();
@@ -27,10 +19,11 @@ const tiposNotificacao = {
 
   const fetchNotificacoes = async () => {
     if (!token) return setErro("Token não encontrado");
+
     try {
-     const res = await axios.get(`${base}`, {
-  headers: { Authorization: `Bearer ${token}` },
-});
+      const res = await axios.get(`${BASE_URL}/doador`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setNotificacoes(res.data);
     } catch (err) {
       console.error(err);
@@ -40,45 +33,90 @@ const tiposNotificacao = {
 
   const marcarComoVisto = async (id_notificacao) => {
     try {
-      await axios.put(`${base}/visto/${id_notificacao}`, {}, {
+      await axios.put(`${BASE_URL}/visualizada`, { id_notificacao }, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      fetchNotificacoes();
+      setNotificacoes(prev =>
+        prev.map(n =>
+          n.id_notificacao === id_notificacao ? { ...n, visto: true } : n
+        )
+      );
     } catch (err) {
       console.error(err);
     }
   };
 
+  const abrirNotificacao = (notificacao) => {
+    if (notificacao.tipo === "novo_agendamento") {
+      navigate("/agendamentos/doador");
+    }
+  };
+
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
-      <h2 className="text-xl font-bold mb-4">Notificações</h2>
-      {erro && <p className="text-red-600">{erro}</p>}
-      {notificacoes.length === 0 ? (
-        <p>Nenhuma notificação.</p>
-      ) : (
-        <ul>
-        {notificacoes.map(n => {
-          const tipo = tiposNotificacao[n.tipo] || tiposNotificacao["geral"];
-          return (
-            <li key={n.id_notificacao} className={`p-3 mb-2 rounded flex items-center gap-3 ${tipo.cor}`}>
-             <div className="flex-1">
-                <p className="font-semibold">{tipo.nome}</p>
-                <p>{n.mensagem}</p>
-                <small>{new Date(n.data_envio).toLocaleString()}</small>
-              </div>
-              {!n.visto && (
-                <button
-                  onClick={() => marcarComoVisto(n.id_notificacao)}
-                  className="ml-2 bg-green-600 text-white px-2 py-1 rounded"
-                >
-                  Marcar como lida
-                </button>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-      )}
+    <div className="px-2 sm:px-4 lg:px-20 mt-6">
+      <div className="bg-white rounded-2xl p-8 space-y-8 mt-8">
+
+        <div className="flex items-center gap-2 mb-6">
+          <span className="text-xl flex items-center justify-center">
+            <HiBell />
+          </span>
+          <h1 className="text-xl font-bold">Minhas notificações</h1>
+        </div>
+
+       
+        {notificacoes.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-screen text-center space-y-3">
+            <h4 className="text-4xl font-bold mb-4">Sem notificações</h4>
+          </div>
+        ) : (
+           <div className="relative overflow-x-auto shadow-md rounded-lg flex-1 max-h-[500px]">
+          <ul className="flex flex-col gap-3">
+            {notificacoes.map((n) => (
+              <li
+                key={n.id_notificacao}
+                onClick={() => abrirNotificacao(n)}
+                className="p-4 rounded-xl shadow-md flex gap-4 cursor-pointer"
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className={`text-sm ${n.visto ? "font-medium text-gray-700" : "font-bold text-gray-900"}`}>
+                      {n.titulo}
+                    </p>
+                    {!n.visto && (
+                      <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full">
+                        Nova
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-gray-700">{n.mensagem}</p>
+                  <small className="text-gray-500">
+                    {new Date(n.data_envio).toLocaleDateString()}{" "}
+                    <span>às</span>{" "}
+                    {n.hora_envio || new Date(n.data_envio).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </small>
+                </div>
+
+                <div className="flex items-center">
+                  {n.visto ? (
+                    <HiCheckCircle className="text-green-600 text-xl" title="Lida" />
+                  ) : (
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        marcarComoVisto(n.id_notificacao);
+                      }}
+                      className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-md text-sm"
+                    >
+                      Marcar como lida
+                    </Button>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -1,6 +1,6 @@
-// shared/validation/agendamentoSchema.js
-import { z } from "zod";
 
+import { z } from "zod";
+//Schemas de validação de agendamentos usando Zod.Uso: validação de formulários antes de enviar dados ao backend, garantindo consistência de tipos e regras de negócio.
 
 export const data_agendamento = z
   .string()
@@ -25,10 +25,8 @@ export const local_doacao = z.string().nonempty("Selecione o local da doação")
 export const obs = z.string().optional();
 
 
-
-// schema do funcionário
 export const id_doador = z.preprocess((val) => {
-  // converte string para número, se possível
+
   if (typeof val === "string") return Number(val);
   return val;
 }, z.number({
@@ -43,7 +41,7 @@ export const agendamentoFuncionarioSchema = z.object({
   local_doacao,
   obs,
 });
-// schema do doador
+
 export const agendamentoDoadorSchema = z.object({
   data_agendamento,
   horario,

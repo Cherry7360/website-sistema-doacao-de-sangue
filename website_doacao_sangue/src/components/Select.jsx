@@ -1,30 +1,35 @@
 import React from "react";
 
-const Select = React.forwardRef(({ label, className = "", children, ...props }, ref) => {
-  return (
-    <div className="flex flex-col">
-      {label && <label className="mb-1 font-medium">{label}</label>}
-      <select
-        ref={ref} // <- permite que o RHF acesse o select
-        className={`border p-2 rounded ${className}`}
-        {...props}
-      >
-        {children}
-      </select>
-    </div>
-  );
-});
+const Select = React.forwardRef(
+  ({ label, required, error, className = "", children, ...props }, ref) => {
+    return (
+      <div className="flex flex-col gap-1 w-full">
+        {label && (
+          <label className="text-sm font-medium text-gray-700">
+            {label}
+            {required && <span className="text-red-500"> *</span>}
+          </label>
+        )}
+
+        <select
+          ref={ref}
+          {...props}
+          className={`
+            w-full px-4 py-2 rounded-lg
+            border text-gray-700 bg-white
+            focus:outline-none focus:ring-2 focus:ring-red-500
+            transition
+            ${error ? "border-red-500" : "border-gray-300"}
+            ${className}
+          `}
+        >
+          {children}
+        </select>
+
+        {error && <span className="text-sm text-red-600">{error}</span>}
+      </div>
+    );
+  }
+);
 
 export default Select;
-
-
-/**
- *  <label for="countries" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Select your country</label>
-  <select id="countries" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-
-    <option>United States</option>
-    <option>Canada</option>
-    <option>France</option>
-    <option>Germany</option>
-  </select>
- */

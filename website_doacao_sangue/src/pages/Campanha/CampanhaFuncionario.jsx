@@ -1,305 +1,336 @@
-
-import { useState,useEffect  } from "react";
-import axios from "axios";
-import Button from "../../components/Button";
-import Input from "../../components/Input";
-
-import Textarea from"../../components/Textarea";
-import Modal from "../../components/Modal";
-
-import {  HiOutlinePlus  } from "react-icons/hi";
+import { useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
-
-import {useForm} from "react-hook-form";
-import {zodResolver} from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { campanhaSchema } from "../../validations/campanhaSchema";
 
+import axios from "axios";
+import AlertCard from "../../components/AlertCard";
+import Button from "../../components/Button";
+import Input from "../../components/Input";
+import Textarea from "../../components/Textarea";
+import Modal from "../../components/Modal";
+import { HiOutlinePlus , HiSearch} from "react-icons/hi";
 
-const base = "http://localhost:5080/campanhas"; 
+const BASE_URL = "http://localhost:5080/campanhas";
 
+// Componente que gerencia campanhas para funcionários, incluindo busca, criação, atualização de estado e remoção
 const CampanhaFuncionario = () => {
-  const [search, setSearch] = useState("");
-  const [campanhas, setCampanhas] = useState([]);
+  const [search, setSearch] = useState(""); 
+  const [campanhas, setCampanhas] = useState([]); 
   const [mostrar, setMostrar] = useState(false);
- 
-  const [loading, setLoading] = useState(true);
-   const [file, setFile] = useState(null); 
-  const [preview, setPreview] = useState(null);
-   
+  const [loading, setLoading] = useState(true); 
+  const [file, setFile] = useState(null); 
+  const [preview, setPreview] = useState(null); 
+  const [alert, setAlert] = useState(null);
+  const token = localStorage.getItem("token");
 
-const token = localStorage.getItem("token");
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({
+    resolver: zodResolver(campanhaSchema),
+  });
 
-const { register, handleSubmit, formState: { errors }, reset } = useForm({
-     resolver: zodResolver(campanhaSchema),
-   });
- 
-   
-   const fetchCampanhas = async () => {
-      try {
-        const res = await axios.get(`${base}/gerir_campanhas`);
-        setCampanhas(res.data);
-      } catch (error) {
-        console.error("Erro ao buscar campanhas:", error);
-      } finally {
-      setLoading(false); 
+  // Função que busca todas as campanhas da API
+  const fetchCampanhas = async () => {
+    try {
+      const res = await axios.get(`${BASE_URL}`);
+      setCampanhas(res.data);
+    } catch (error) {
+      console.error("Erro ao buscar campanhas:", error);
+    } finally {
+      setLoading(false);
     }
-    };
+  };
 
+ // Hook que chama fetchCampanhas ao carregar o componente
   useEffect(() => {
     fetchCampanhas();
   }, []);
 
-   const campanhasFiltradas = campanhas.filter((c) => {
+   // Função que filtra as campanhas com base no termo de busca
+  const campanhasFiltradas = campanhas.filter((c) => {
     const termo = search.toLowerCase();
-  const nomeCampanha = c.Campanha?.descricao?.toLowerCase() || "";
-
-    return (
-    nomeCampanha.includes(termo)||
-     String(c.id_campanha).includes(termo)   
-    );
+    const nomeCampanha = c.Campanha?.descricao?.toLowerCase() || "";
+    return nomeCampanha.includes(termo) || String(c.id_campanha).includes(termo);
   });
 
-    const { getRootProps, getInputProps } = useDropzone({
-        accept: { "image/*": [] },
-        onDrop: (acceptedFiles) => {
-          const file = acceptedFiles[0];
-          setFile(file);
-          setPreview(URL.createObjectURL(file));
-        },
+ 
+  // Configuração do Dropzone para upload de imagens
+  const { getRootProps, getInputProps } = useDropzone({
+    accept: { "image/*": [] },
+    onDrop: (acceptedFiles) => {
+      const file = acceptedFiles[0];
+      setFile(file);
+      setPreview(URL.createObjectURL(file));
+    },
+  });
+
+ // Função que envia uma nova campanha para a API
+  const onSubmit = async (data) => {
+    try {
+      const formData = new FormData();
+      formData.append("descricao", data.descricao);
+       formData.append("titulo", data.titulo);
+      formData.append("data_campanha", data.data_campanha);
+      formData.append("horario", data.horario);
+      formData.append("local", data.local);
+      formData.append("id_funcionario", data.id_funcionario);
+      if (file) formData.append("foto", file);
+
+      await axios.post(`${BASE_URL}`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data"  
+        }
       });
 
-const onSubmit = async (data) => {
-  try {
-    const formData = new FormData();
-
-   
-    formData.append("descricao", data.descricao);
-    formData.append("data_campanha", data.data_campanha);
-    formData.append("horario", data.horario);
-    formData.append("local", data.local);
-    formData.append("id_funcionario", data.id_funcionario);
-
- 
-    if (file) formData.append("foto", file);
-for (let [key, value] of formData.entries()) {
-  console.log(key, value);
-}
+       setAlert({ type: "success", message: "Campanha criado com sucesso!" });
 
 
-const fotoFile = formData.get("foto");
-if (fotoFile instanceof File) {
-  console.log("Arquivo:", fotoFile);
-  console.log("Nome:", fotoFile.name);
-  console.log("Tipo:", fotoFile.type);
-  console.log("Tamanho:", fotoFile.size);
-}
+     
+      const res = await axios.get(`${BASE_URL}`);
+      setCampanhas(res.data);
 
+      reset();
+      setFile(null);
+      setPreview(null);
+      setMostrar(false);
+    } catch (error) {
+      console.error("Erro ao adicionar campanha:", error);
+      setAlert({ type: "error", message: "Erro ao criar campanha."});
 
-
-    await axios.post(`${base}/gerir_campanhas`, formData, {
-      headers: { 
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "multipart/form-data"  
-      }
-    });
-
-    alert("Campanha adicionada com sucesso!");
-
-
-    const res = await axios.get(`${base}/gerir_campanhas`);
-    setCampanhas(res.data);
-
-
-    reset();
-    setFile(null);
-    setPreview(null);
-    setMostrar(false);
-
-  } catch (error) {
-    console.error("Erro ao adicionar campanha:", error);
-   
-    alert("Erro ao adicionar campanha.");
-  }
-};
-
+    }
+  };
+  // Função que atualiza o estado de uma campanha (ativo/inativo)
   const atualizarEstado = async (id, estado) => {
-      console.log("Enviando:", { id, estado, token }); 
-    await axios.put(`${base}/gerir_campanhas/${id}`, { estado},
-      {headers: { Authorization: `Bearer ${token}` },}
+    try {
+      await axios.put(`${BASE_URL}/${id}`, { estado }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+       setAlert({type:"success", message:"Campanha atualizada!"});
+   
+        setCampanhas(prev =>
+      prev.map(c =>
+        c.id_campanha === id ? { ...c, estado } : c
+      )
     );
-  const res = await axios.get(`${base}/gerir_campanhas`);
-    setCampanhas(res.data);
-    };
+    } catch (error) {
+      console.error("Erro ao atualizar estado:", error);
+      setAlert({type:"error", message:"Erro ao atualizada campanha!"});
+   
+    }
+  };
 
-
+  // Função que remove uma campanha da API
   const removerCampanha = async (id) => {
-    await axios.delete(`${base}/gerir_campanhas/${id}`, {
+    try {
+      await axios.delete(`${BASE_URL}/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-    const res = await axios.get(`${base}/gerir_campanhas`);
-    setCampanhas(res.data);
-    };
-
+      const res = await axios.get(`${BASE_URL}`);
+      setCampanhas(res.data);
+      setAlert({type:"success", message:"Campanha removida!"});
+   
+    } catch (error) {
+      console.error("Erro ao remover campanha:", error);
+       setAlert({type:"error", message:"Erro ao remover campanha!"});
+   
+    }
+  };
 
   return (
-    <div>
-<div className="p-6 flex flex-col h-full">
+  <div>
+      <div className="p-6 flex flex-col h-full">
 
-  <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
-    <h2 className="text-xl font-bold">Lista campanhas</h2>
-    <Button
-      onClick={() => setMostrar(true)}
-      className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-    >
-      < HiOutlinePlus  size={18} />
-      Adicionar
-    </Button>
-  </div>
-
-
-    <Input
-        type="text"
-        placeholder="Pesquisar Id campanha" 
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="mb-6 w-full border border-gray-300 p-2 rounded-lg" 
-      />
-
-  {loading ? (
-    <p>Carregando...</p>
-  ) : campanhas.length === 0 ? (
-    <p>Nenhuma campanha encontrada.</p>
-  ) : (
-    <div className="relative overflow-x-auto shadow-md rounded-lg flex-1">
-      <table className="min-w-full text-sm text-left text-gray-700 border border-gray-300">
-        <thead className="bg-gray-100 text-gray-700 uppercase text-xs tracking-wider">
-          <tr>
-            <th className="px-6 py-3 border-b">ID</th>
-            <th className="px-6 py-3 border-b">Descrição</th>
-            <th className="px-6 py-3 border-b">Local</th>
-            <th className="px-6 py-3 border-b">Data</th>
-            <th className="px-6 py-3 border-b">Horário</th>
-            <th className="px-6 py-3 border-b">Ações</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {campanhasFiltradas.map((c) => (
-            <tr key={c.id_campanha} className="bg-white border-b hover:bg-gray-50 transition">
-              <td className="px-6 py-4 font-medium text-gray-900">{c.id_campanha}</td>
-              <td className="px-6 py-4 font-medium text-gray-900">{c.descricao}</td>
-              <td className="px-6 py-4 font-medium text-gray-900">{c.local}</td>
-              <td className="px-6 py-4 font-medium text-gray-900">{c.data_campanha}</td>
-              <td className="px-6 py-4 font-medium text-gray-900">{c.horario}</td>
-              <td className="px-6 py-4 font-medium text-gray-900 flex gap-2 flex-wrap">
-                {!c.estado ? (
-                  <>
-                    <button
-                      onClick={() => atualizarEstado(c.id_campanha, true)}
-                      className="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700"
-                    >
-                      Ativar
-                    </button>
-                    <button
-                      onClick={() => removerCampanha(c.id_campanha)}
-                      className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700"
-                    >
-                      Remover
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => atualizarEstado(c.id_campanha, false)}
-                      className="bg-gray-500 text-white px-2 py-1 rounded hover:bg-gray-600"
-                    >
-                      Inativar
-                    </button>
-                    <button
-                      onClick={() => removerCampanha(c.id_campanha)}
-                      className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700"
-                    >
-                      Remover
-                    </button>
-                  </>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )}
-</div>
-
-
-
-   <Modal mostrar={mostrar} fechar={() => setMostrar(false)} titulo="Nova Campanha">
-  <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 w-full max-w-2xl mx-auto">
-    <div className="border border-gray-100 rounded-lg p-6 space-y-4 shadow-sm">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-    
-        <div className="space-y-4">
-          <Input
-            type="number"
-            placeholder="ID Funcionário"
-            className="w-full border p-2 rounded"
-            {...register("id_funcionario")}
-            error={errors.id_funcionario?.message}
-          />
-          <Textarea
-            placeholder="Descrição da campanha"
-            className="w-full border p-2 rounded"
-            {...register("descricao")}
-            error={errors.descricao?.message}
-          />
-          <Input
-            type="date"
-            className="w-full border p-2 rounded"
-            {...register("data_campanha")}
-            error={errors.data_campanha?.message}
-          />
-          <Input
-            type="time"
-            className="w-full border p-2 rounded"
-            {...register("horario")}
-            error={errors.horario?.message}
-          />
-          <Input
-            type="text"
-            placeholder="Local da campanha"
-            className="w-full border p-2 rounded"
-            {...register("local")}
-            error={errors.local?.message}
-          />
+       
+        <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
+          <h2 className="text-xl font-bold">Lista campanhas</h2>
+          <Button
+            onClick={() => setMostrar(true)}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+          >
+            <HiOutlinePlus size={18} />
+            Adicionar
+          </Button>
         </div>
 
        
-        <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 hover:border-red-500 transition">
-          <div
-            {...getRootProps()}
-            className="w-full h-64 flex flex-col items-center justify-center cursor-pointer"
-          >
-            <input {...getInputProps()} />
-            {preview ? (
-              <img src={preview} alt="Pré-visualização" className="h-full w-full object-contain rounded-lg" />
-            ) : (
-              <p className="text-gray-500 text-center">Arraste a imagem ou clique para selecionar</p>
-            )}
-          </div>
+        <div className="relative mb-4">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+            <HiSearch/>
+          </span>
+
+          <Input
+            type="text"
+            placeholder="Pesquisar "
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10 w-full border border-gray-300 rounded-lg"
+          />
         </div>
 
+        {alert && (
+          <div className="fixed top-5 right-5 z-50">
+            <AlertCard
+              type={alert.type}
+              message={alert.message}
+              onClose={() => setAlert(null)}
+            />
+          </div>
+        )}
+       
+        {loading ? (
+          <div className="flex flex-col items-center justify-center h-screen text-center space-y-3">
+            <h4 className="text-4xl font-bold mb-4">Carregando ...</h4>
+          </div>
+        ) : campanhas.length === 0 ? (
+           <div className="flex flex-col items-center justify-center h-64 text-center">
+            <h4 className="text-2xl font-bold">Nenhuma campanha encontrada</h4>
+          </div>
+        ) : (
+          <div className="relative overflow-x-auto shadow-md rounded-lg flex-1 max-h-[500px]">
+            <table className="min-w-full text-sm text-left text-gray-700 border border-gray-300">
+              <thead className="bg-gray-100 text-gray-700 uppercase text-xs tracking-wider">
+                <tr>
+                  <th className="px-6 py-3 border-b">ID</th>
+                  <th className="px-6 py-3 border-b">Titulo</th>
+                  <th className="px-6 py-3 border-b">Descrição</th>
+                  <th className="px-6 py-3 border-b">Local</th>
+                  <th className="px-6 py-3 border-b">Data</th>
+                  <th className="px-6 py-3 border-b">Horário</th>
+                  <th className="px-6 py-3 border-b">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {campanhasFiltradas.map((c) => (
+                  <tr key={c.id_campanha} className="bg-white border-b hover:bg-gray-50 transition">
+                    <td className="px-6 py-4 font-medium text-gray-900">{c.id_campanha}</td>
+                     <td className="px-6 py-4 font-medium text-gray-900"> {c.titulo ?? "-"}</td>
+                    <td className="px-6 py-4 font-medium text-gray-900">{c.descricao}</td>
+                    <td className="px-6 py-4 font-medium text-gray-900">{c.local}</td>
+                    <td className="px-6 py-4 font-medium text-gray-900">{c.data_campanha}</td>
+                    <td className="px-6 py-4 font-medium text-gray-900">{c.horario}</td>
+                    <td className="px-6 py-4 font-medium text-gray-900 flex gap-2 flex-wrap">
+                      {!c.estado ? (
+                        <>
+                          <button
+                            onClick={() => atualizarEstado(c.id_campanha, true)}
+                            className="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700"
+                          >
+                            Ativar
+                          </button>
+                          <button
+                            onClick={() => removerCampanha(c.id_campanha)}
+                            className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700"
+                          >
+                            Remover
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => atualizarEstado(c.id_campanha, false)}
+                            className="bg-gray-500 text-white px-2 py-1 rounded hover:bg-gray-600"
+                          >
+                            Inativar
+                          </button>
+                          <button
+                            onClick={() => removerCampanha(c.id_campanha)}
+                            className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700"
+                          >
+                            Remover
+                          </button>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-   
-      <Button type="submit" className="bg-green-600 text-white px-6 py-2 rounded-lg mt-4 w-full md:w-auto">
-        Salvar
-      </Button>
-    </div>
-  </form>
-</Modal>
+      <Modal mostrar={mostrar} fechar={() => setMostrar(false)} titulo="Nova Campanha">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 w-full max-w-2xl mx-auto">
+          <div className="rounded-lg p-4 space-y-4 shadow-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
+            
+              <div className="space-y-4">
+             
+                  <Input
+                    type="number"
+                    label="ID Funcionário"
+                   {...register("id_funcionario")}
+                    error={errors.id_funcionario?.message}
+                  />
+
+                  <Input
+                    type="text"
+                    label="Título da Campanha"
+                    {...register("titulo")}
+                    error={errors.titulo?.message}
+                  />
+
+                  <Textarea
+                    label="Descrição da Campanha"
+                    {...register("descricao")}
+                    error={errors.descricao?.message}
+                  />
+
+                  <Input
+                    type="date"
+                    label="Data da Campanha"
+                    className="w-full border p-2 rounded"
+                    {...register("data_campanha")}
+                    error={errors.data_campanha?.message}
+                  />
+
+                  <Input
+                    type="time"
+                    label="Horário"
+                    {...register("horario")}
+                    error={errors.horario?.message}
+                  />
+
+                  <Input
+                    type="text"
+                    label="Local da Campanha"
+                    {...register("local")}
+                    error={errors.local?.message}
+                  />
+              
+              </div>
+            
+              <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 hover:border-red-500 transition">
+                <div
+                  {...getRootProps()}
+                  className="w-full h-64 flex flex-col items-center justify-center cursor-pointer"
+                >
+                  <input {...getInputProps()} />
+                  {preview ? (
+                    <img src={preview} alt="Pré-visualização" className="h-full w-full object-contain rounded-lg" />
+                  ) : (
+                    <p className="text-gray-500 text-center">Arraste a imagem ou clique para selecionar</p>
+                  )}
+                </div>
+              </div>
+
+            </div>
+
+         
+            <div className="flex justify-center p-4 mt-4">
+              <Button 
+                type="submit" 
+                className="bg-green-600 py-2 px-6 text-white font-semibold transition duration-150 rounded-md"
+              >
+                Salvar
+              </Button>
+            </div>
+
+          </div>
+        </form>
+      </Modal>
 
     </div>
   );

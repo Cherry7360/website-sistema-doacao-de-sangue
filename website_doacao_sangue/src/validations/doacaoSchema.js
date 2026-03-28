@@ -1,4 +1,5 @@
 import { z } from "zod";
+//Schemas de validação de agendamentos usando Zod.Uso: validação de formulários antes de enviar dados ao backend, garantindo consistência de tipos e regras de negócio.
 
 export const id_doador = z.preprocess((val) => {
   if (typeof val === "string") return Number(val);
@@ -6,6 +7,13 @@ export const id_doador = z.preprocess((val) => {
 }, z.number({
   required_error: "Informe o ID do doador",
   invalid_type_error: "ID do doador deve ser um número",
+}));
+export const id_agendamento = z.preprocess((val) => {
+  if (typeof val === "string") return Number(val);
+  return val;
+}, z.number({
+  required_error: "Informe o id do agendamento",
+  invalid_type_error: "ID do agendamento deve ser um número",
 }));
 
 export const descricao = z.string().optional();
@@ -24,10 +32,13 @@ export const data_doacao = z
     return diaSemana !== 0 && diaSemana !== 6;
   }, "data de doacao invalida",{required_error:" invalido"});
 
+
 export const doacaoSchema = z.object({
   id_doador,
+  id_agendamento,
+  data_doacao: z.string({
+    required_error: "Informe a data da doação",
+  }),
   estado,
- 
-  descricao,
-  data_doacao,
+  descricao: z.string().optional(),
 });

@@ -1,230 +1,177 @@
-
-
-
 import { useEffect, useState } from "react";
+import { HiCheckCircle, HiClock, HiHeart, HiTrendingUp } from "react-icons/hi";
 import axios from "axios";
+import Grafico from "../../components/Grafico";
 
-const DoacaoDoador = ({ id_doador }) => {
-  const [formData, setFormData] = useState({ data_agendamento: "", horario: "", obs: "" });
-  const [erro, setErro] = useState("");
-  const [mensagem, setMensagem] = useState("");
+const BASE_URL = "http://localhost:5080/doacoes";
 
+const CardInfo = ({
+  accentColor,
+  icon,
+  iconBg = "bg-gray-100",
+  iconColor = "text-gray-600",
+  title,
+  value,
+  subtitle,
+  highlight
+}) => (
+  <div
+    className={`relative rounded-xl shadow-md p-6 flex gap-4 bg-white transition hover:shadow-lg
+      ${highlight ? "ring-2 ring-red-100" : ""}`}
+  >
+    <span className={`absolute left-0 top-0 h-full w-1 rounded-l-xl ${accentColor}`} />
+    <div className={`flex items-center justify-center w-12 h-12 rounded-full ${iconBg}`}>
+      <span className={`text-xl ${iconColor}`}>{icon}</span>
+    </div>
+    <div className="flex flex-col justify-center">
+      <p className="text-sm text-gray-500">{title}</p>
+      <p className="text-2xl font-bold text-gray-800">{value}</p>
+      {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
+    </div>
+  </div>
+);
+
+const DoacaoDoador = () => {
+  const [historico, setHistorico] = useState([]);
   const [infoDoador, setInfoDoador] = useState(null);
-  const [agendamentos, setAgendamentos] = useState([]);
-  const [notificacoes, setNotificacoes] = useState([]);
+  const [doacoesAnuais, setDoacoesAnuais] = useState([]);
+  const token = localStorage.getItem("token");
 
-  const base = "http://localhost:5080/doacoes";
-
-  // Carregar dados iniciais
   useEffect(() => {
-    if (id_doador) {
-      fetchInfoDoador();
-      fetchAgendamentos();
-      fetchNotificacoes();
+    fetchHistorico();
+    fetchInfoDoador();
+  }, [token]);
+
+  const fetchHistorico = async () => {
+    try {
+      const res = await axios.get(`${BASE_URL}/doador/historico-doador`, { headers: { Authorization: `Bearer ${token}` } });
+      setHistorico(res.data);
+    } catch (err) {
+      console.error("Erro ao carregar histórico:", err);
     }
-  }, [id_doador]);
+  };
+
+  useEffect(() => {
+    if (historico.length > 0) {
+      const resultado = {};
+      historico.forEach((item) => {
+        const ano = new Date(item.data_doacao).getFullYear();
+        resultado[ano] = (resultado[ano] || 0) + 1;
+      });
+      const formatado = Object.entries(resultado).map(([ano, total]) => ({
+        ano: Number(ano),
+        total,
+      }));
+      setDoacoesAnuais(formatado.sort((a, b) => a.ano - b.ano));
+    }
+  }, [historico]);
 
   const fetchInfoDoador = async () => {
     try {
-      const res = await axios.get(`${base}/doadores/${id_doador}`);
+      const res = await axios.get(`${BASE_URL}/doador/informacao-doador`, { headers: { Authorization: `Bearer ${token}` } });
       setInfoDoador(res.data);
     } catch (err) {
       console.error(err);
     }
   };
 
-  const fetchAgendamentos = async () => {
-    try {
-      const res = await axios.get(`${base}/agendamentos/meus/${id_doador}`);
-      setAgendamentos(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  if (!infoDoador) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen text-center space-y-3 bg-gray-50">
+        <h4 className="text-4xl font-bold mb-4 text-gray-700">Sem dados</h4>
+      </div>
+    );
+  }
 
-  const fetchNotificacoes = async () => {
-    try {
-      const res = await axios.get(`${base}/notificacoes/doador/${id_doador}`);
-      setNotificacoes(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    setErro("");
-    setMensagem("");
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const dataSelecionada = new Date(formData.data_agendamento);
-    const diaSemana = dataSelecionada.getDay();
-    if (diaSemana === 0 || diaSemana === 6) {
-      setErro("Não é possível agendar aos fins de semana.");
-      return;
-    }
-
-    const [hora] = formData.horario.split(":").map(Number);
-    if (hora < 8 || hora >= 15) {
-      setErro("Horário deve ser entre 08:00 e 15:00.");
-      return;
-    }
-
-    try {
-      await axios.post(`${base}/agendamentos/agendar_doador`, { ...formData, id_doador });
-      setMensagem("Agendamento enviado! Aguarde confirmação.");
-      setFormData({ data_agendamento: "", horario: "", obs: "" });
-      fetchAgendamentos();
-    } catch (err) {
-      console.error(err);
-      setErro("Erro ao agendar. Tente novamente.");
-    }
-  };
-
-  const marcarComoLida = async (id_notificacao) => {
-    try {
-      await axios.put(`${base}/notificacoes/marcar/${id_notificacao}`);
-      fetchNotificacoes();
-    } catch (err) {
-      console.error(err);
-    }
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "—";
+    const [year, month, day] = dateStr.split("-");
+    const date = new Date(year, month - 1, day);
+    return date.toLocaleDateString("pt-PT", { day: "2-digit", month: "2-digit", year: "numeric" });
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-      {/* Formulário de Agendamento */}
-      <div className="bg-white p-6 rounded shadow">
-        <h2 className="text-xl font-bold mb-4 text-center">Agendar Doação</h2>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <input
-            type="date"
-            name="data_agendamento"
-            value={formData.data_agendamento}
-            onChange={handleChange}
-            className="border p-2 rounded"
-            required
-          />
-          <input
-            type="time"
-            name="horario"
-            value={formData.horario}
-            onChange={handleChange}
-            className="border p-2 rounded"
-            required
-          />
-          <textarea
-            name="obs"
-            value={formData.obs}
-            onChange={handleChange}
-            placeholder="Observações (opcional)"
-            className="border p-2 rounded"
-          />
-          <button
-            type="submit"
-            className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
-          >
-            Agendar
-          </button>
-        </form>
-        {erro && <p className="text-red-600 mt-2">{erro}</p>}
-        {mensagem && <p className="text-green-700 mt-2">{mensagem}</p>}
-      </div>
+  <div className="bg-gray-50 min-h-screen space-y-16 px-4 md:px-12 py-12">
 
-      {/* Card informativo do doador */}
-      {infoDoador && (
-        <div className="bg-gray-50 p-6 rounded shadow flex flex-col gap-3">
-          <h2 className="text-lg font-semibold text-center">Informações do Doador</h2>
-          <div className="grid grid-cols-3 gap-2">
-            <div className="bg-red-100 text-red-800 p-2 rounded text-center">
-              <p className="text-sm font-semibold">Tipo Sanguíneo</p>
-              <h2 className="text-xl font-bold">{infoDoador.tipo_sangue || "—"}</h2>
+    {/* Título */}
+    <div className="flex items-center gap-3">
+      <HiHeart className=" text-2xl" />
+      <h1 className="text-xl font-bold">Minhas Doações</h1>
+    </div>
+
+  {/* Cards principais */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 w-fit ">
+          <CardInfo
+            accentColor="bg-red-500"
+            icon={<HiHeart />}
+            iconBg="bg-red-100"
+            iconColor="text-red-600"
+            title="Tipo sanguíneo"
+            value={infoDoador.tipo_sangue || "—"}
+          />
+
+          <CardInfo
+            accentColor="bg-green-500"
+            icon={<HiClock />}
+            iconBg="bg-green-100"
+            iconColor="text-green-600"
+            title="Sugestão de próxima doação"
+            value={infoDoador.proxima_doacao ? formatDate(infoDoador.proxima_doacao) : "Cálculo em análise"}
+            subtitle={infoDoador.status_doacao}
+            highlight
+          />
+        </div>
+    {/* Condição: se não houver histórico */}
+    {historico.length === 0 ? (
+      <div className="lg:col-span-7 bg-white rounded-xl shadow-md p-6">
+    <div className="flex flex-col items-center justify-center py-20 text-center">
+      <p className="text-gray-500 text-lg">
+        Nenhuma doação registada até agora.
+      </p>
+    </div>
+  </div>
+    ) : (
+      <>
+      
+
+        {/* Gráfico + histórico */}
+        <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
+          {/* Gráfico de progresso anual */}
+          <div className="lg:col-span-7 bg-white rounded-xl shadow-md p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <HiTrendingUp className="text-gray-800 text-2xl" />
+              <h1 className="text-lg font-bold ">Progresso anual de doações</h1>
             </div>
-            <div className="bg-blue-100 text-blue-800 p-2 rounded text-center">
-              <p className="text-sm font-semibold">Doações</p>
-              <h2 className="text-xl font-bold">{infoDoador.total_doacoes || 0}</h2>
+            <Grafico
+              dados={doacoesAnuais}
+              titulo=""
+              barraUnica={{ chave: "total", cor: "rgba(185,28,28,0.8)", dataField: "ano" }}
+            />
+          </div>
+
+          {/* Histórico recente */}
+          <div className="lg:col-span-3 bg-white rounded-xl shadow-md p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <HiClock className="text-gray-800 text-2xl" />
+              <h1 className="text-lg font-bold">Histórico recente</h1>
             </div>
-            <div className="bg-green-100 text-green-800 p-2 rounded text-center">
-              <p className="text-sm font-semibold">Última Doação</p>
-              <h2 className="text-lg font-medium">
-                {infoDoador.ultima_doacao?.data_doacao || "Nenhuma"}
-              </h2>
-            </div>
+            <ul className="space-y-4 max-h-[350px] overflow-y-auto">
+              {historico.slice(0, 5).map((item, index) => (
+                <li key={index} className="flex items-center justify-between border-b border-gray-200 pb-2 last:border-b-0">
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">{formatDate(item.data_doacao)}</p>
+                    <p className="text-xs text-gray-500">{item.local_doacao || "Local não informado"}</p>
+                  </div>
+                  <HiCheckCircle className="text-green-600 text-xl" />
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
-      )}
-
-      {/* Lista de notificações */}
-      <div className="bg-white p-6 rounded shadow col-span-2">
-        <h2 className="text-xl font-bold mb-4 text-gray-800">Notificações</h2>
-        {notificacoes.length === 0 ? (
-          <p className="text-gray-500 text-center">Sem notificações.</p>
-        ) : (
-          notificacoes.map((n) => (
-            <div
-              key={n.id_notificacao}
-              className={`p-3 rounded shadow flex justify-between items-center mb-2 ${
-                n.visto ? "bg-gray-100" : "bg-yellow-100"
-              }`}
-            >
-              <div>
-                <p className="font-medium text-gray-800">{n.mensagem}</p>
-                <p className="text-xs text-gray-600 mt-1">
-                  {new Date(n.data_envio).toLocaleString()}
-                </p>
-              </div>
-              {!n.visto && (
-                <button
-                  onClick={() => marcarComoLida(n.id_notificacao)}
-                  className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
-                >
-                  Marcar como lida
-                </button>
-              )}
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* Lista de agendamentos pendentes */}
-      <div className="bg-white p-6 rounded shadow col-span-2">
-        <h2 className="text-xl font-bold mb-4 text-gray-800">Agendamentos</h2>
-        {agendamentos.length === 0 ? (
-          <p className="text-gray-500 text-center">Nenhum agendamento.</p>
-        ) : (
-          agendamentos.map((a) => (
-            <div
-              key={a.id_agendamento}
-              className={`p-3 rounded shadow mb-2 ${
-                a.estado === "pendente" ? "bg-yellow-100" : "bg-gray-100"
-              }`}
-            >
-              <p>
-                <strong>Data:</strong> {a.data_agendamento} <strong>Hora:</strong> {a.horario}
-              </p>
-              <p>
-                <strong>Estado:</strong> {a.estado}
-              </p>
-              {a.obs && <p className="text-sm text-gray-600">{a.obs}</p>}
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
+      </>
+    )}
+  </div>
+);
 };
 
 export default DoacaoDoador;
-
-
-
-
-
-
-
-
-
-
-

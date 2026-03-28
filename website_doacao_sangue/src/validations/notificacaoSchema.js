@@ -1,4 +1,5 @@
 import { z } from "zod";
+//Schemas de validação de agendamentos usando Zod.Uso: validação de formulários antes de enviar dados ao backend, garantindo consistência de tipos e regras de negócio.
 
 export const id_doador = z.preprocess(val => {
   if (typeof val === "string") return Number(val);

@@ -1,263 +1,325 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
-import Card from "../../components/Cards";
-import Input from "../../components/Input";
-import Select from "../../components/Select";
-import Textarea from "../../components/Textarea";
-import Button from "../../components/Button";
+
+ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { agendamentoDoadorSchema } from "../../validations/agendamentoSchema.js";
-import { HiOutlineUser, HiOutlineClipboardList, HiOutlineCalendar, HiOutlineClock } from "react-icons/hi";
+import axios from "axios";
 
+import AlertCard from "../../components/AlertCard.jsx";
+import Card from "../../components/Cards.jsx";
+import Input from "../../components/Input.jsx";
+import Select from "../../components/Select.jsx";
+import Textarea from "../../components/Textarea.jsx";
+import Button from "../../components/Button.jsx";
+import Modal from "../../components/Modal";
 
+import { HiCalendar,HiClipboardList, HiClock,HiOutlineHeart, HiInformationCircle, HiCheck, HiX, HiOutlineCalendar  } from "react-icons/hi";
+import { FaTint } from "react-icons/fa";
+const BASE_URL = "http://localhost:5080/agendamentos";
+const ITEMS_PER_PAGE = 5;
+
+// Componente que gerencia os agendamentos do doador, incluindo histórico, próximo agendamento e envio de novos agendamentos
 const AgendamentoDoador = () => {
-  const base = "http://localhost:5080/agendamentos";
   const token = localStorage.getItem("token");
-
-  const [infoDoador, setInfoDoador] = useState(null);
-  const [historico, setHistorico] = useState([]);
-  const [proximoAgendamento, setProximoAgendamento] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [proximoAgendamento, setproximoAgendamento] = useState(null);
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+  const [mostrarModal, setMostrarModal] = useState(false);
+   const [alert, setAlert] = useState(null);
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: zodResolver(agendamentoDoadorSchema),
   });
 
-  useEffect(() => {
-    fetchInfoDoador();
-    fetchHistorico();
-  }, []);
-
-  const fetchInfoDoador = async () => {
+// Função que busca o histórico de agendamentos do doador e define o próximo agendamento pendente
+  const fetchHistory = async () => {
     try {
-      const res = await axios.get(`${base}/info_doador`, {
+      const res = await axios.get(`${BASE_URL}/meu-historico`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setInfoDoador(res.data);
+
+      const data = res.data.historico || [];
+      setHistory(data);
+
+      const pending = data
+        .filter((a) => a.estado === "Aguardando_resposta")
+        .sort((a, b) => new Date(`${a.data_agendamento} ${a.horario}`) - new Date(`${b.data_agendamento} ${b.horario}`));
+
+      setproximoAgendamento(pending[0] || null);
     } catch (err) {
       console.error(err);
     }
   };
 
-  const fetchHistorico = async () => {
+  // Hook que chama fetchHistory ao carregar o componente
+  useEffect(() => { 
+    fetchHistory();
+   }, []);
+  // Função que envia um novo agendamento do doador
+  const handleSubmitAgendamento = async (data) => {
+     
     try {
-      const res = await axios.get(`${base}/historico`, {
+      await axios.post(`${BASE_URL}/doador`, data, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setHistorico(res.data);
-
-      const proximo = res.data
-        .filter(a => a.estado === "pendente" || a.estado === "confirmado")
-        .sort((a, b) => new Date(a.data_agendamento + " " + a.horario) - new Date(b.data_agendamento + " " + b.horario));
-      setProximoAgendamento(proximo[0] || null);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const onSubmit = async (data) => {
-    try {
-      await axios.post(`${base}/agendar_doador`, data, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      alert("Agendamento enviado! Aguarde confirmação.");
+  
       reset();
-      fetchHistorico();
-      fetchInfoDoador();
+       setAlert({ type: "success", message: "Agendamento criado com sucesso." });
+ 
+      setMostrarModal(false);
+      fetchHistory();
     } catch (err) {
-      console.error(err);
-      alert(err.response?.data?.mensagem || "Erro ao agendar. Tente novamente.");
+        setAlert({
+      type: "error",
+      message: err.response?.data?.message || "Erro ao criar agendamento."
+    });
     }
   };
+
+ // Função que envia a resposta de um agendamento (confirmado ou recusar)
+  const handleAgendamentoResponse = async (id, estado) => {
+    try {
+      await axios.put(
+        `${BASE_URL}/resposta`,
+        { id_agendamento: id, estado },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+       setAlert({
+      type: "success",
+      message: `Agendamento ${estado === "Confirmado" ? "aceite" : "recusado"} com sucesso`
+    });
+
+      
+      fetchHistory();
+    } catch (err) {
+      alert("Erro ao responder agendamento.");
+    }
+  };
+
+  const formatarHora = (hora) => {
+  if (!hora) return "";
+  const [h, m] = hora.split(":");
+  const hh = h.padStart(2, "0");
+  const mm = m.padStart(2, "0");
+  return `${hh}:${mm}`;
+};
 
   return (
-    <div className="max-w-6xl mx-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-   {infoDoador && (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      
-        <div className="flex items-center p-6 rounded-xl shadow-lg bg-red-600 text-white transition-transform hover:scale-105">
-          <div className="p-4 rounded-full bg-white/20 mr-4">
-            <HiOutlineUser className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold">{infoDoador.tipo_sangue || "—"}</p>
-            <p className="text-sm opacity-80">Tipo Sanguíneo</p>
-          </div>
-        </div>
-
-      
-        <div className="flex items-center p-6 rounded-xl shadow-lg bg-blue-600 text-white transition-transform hover:scale-105">
-          <div className="p-4 rounded-full bg-white/20 mr-4">
-            <HiOutlineClipboardList className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold">{infoDoador.total_doacoes || 0}</p>
-            <p className="text-sm opacity-80">Doações</p>
-          </div>
-        </div>
-        <div className="flex items-center p-6 rounded-xl shadow-lg bg-green-600 text-white transition-transform hover:scale-105">
-          <div className="p-4 rounded-full bg-white/20 mr-4">
-            <HiOutlineCalendar className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-lg font-medium">
-              {infoDoador.ultima_doacao?.data_doacao
-                ? new Date(infoDoador.ultima_doacao.data_doacao).toLocaleDateString("pt-PT")
-                : "Nenhuma"}
-            </p>
-            <p className="text-sm opacity-80">Última Doação</p>
-          </div>
-        </div>
-
-        {proximoAgendamento && (
-          <div className="flex items-center p-6 rounded-xl shadow-lg bg-yellow-500 text-white transition-transform hover:scale-105">
-            <div className="p-4 rounded-full bg-white/20 mr-4">
-              <HiOutlineClock className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold">Próximo Agendamento</p>
-              <p>Data: {new Date(proximoAgendamento.data_agendamento).toLocaleDateString("pt-PT")}</p>
-              <p>Hora: {proximoAgendamento.horario}</p>
-            </div>
-          </div>
-        )}
-      </div>
-)}
-
-
-      <Card className="bg-white p-6 rounded shadow col-span-2">
-        <h2 className="text-xl font-bold mb-4 text-center">Agendar Doação</h2>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3 max-w-md mx-auto">
-          <Input type="date" {...register("data_agendamento")} />
-          {errors.data_agendamento && <p className="text-red-600">{errors.data_agendamento.message}</p>}
-
-          <Input type="time" {...register("horario")} />
-          {errors.horario && <p className="text-red-600">{errors.horario.message}</p>}
-
-          <Select {...register("local_doacao")}>
-            <option value="">Selecione o local</option>
-            <option value="Hospital Dr. Agostinho Neto">Hospital Dr. Agostinho Neto</option>
-            <option value="Hospital Regional Santiago Norte">Hospital Regional Santiago Norte</option>
-          </Select>
-          {errors.local_doacao && <p className="text-red-600">{errors.local_doacao.message}</p>}
-
-          <Textarea {...register("obs")} placeholder="Observações (opcional)" />
-          {errors.obs && <p className="text-red-600">{errors.obs.message}</p>}
-
-          <Button type="submit" className="bg-blue-700 hover:bg-green-600">
-            Agendar
-          </Button>
-        </form>
-      </Card>
-
-  <Card className="bg-white p-6 rounded shadow col-span-2">
-  <h2 className="text-2xl font-bold mb-6 text-gray-800">Histórico de Agendamentos</h2>
-
-  {historico.length === 0 ? (
-    <p className="text-gray-500 text-center">Nenhuma doação realizada.</p>
-  ) : (
-    historico.map(a => (
-      <div
-        key={a.id_agendamento}
-        className="p-4 rounded-lg shadow-sm mb-4 bg-gray-50 hover:bg-gray-100 transition-colors"
-      >
-        <div className="flex justify-between items-center mb-3">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-1 text-gray-700">
-              <svg
-                className="w-5 h-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7H3v12a2 2 0 002 2z"
-                />
-              </svg>
-              <span>{a.data_agendamento}</span>
-            </div>
-            <div className="flex items-center space-x-1 text-gray-700">
-              <svg
-                className="w-5 h-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span>{a.horario}</span>
-            </div>
-          </div>
-          <span
-            className={`px-2 py-1 rounded text-sm font-semibold ${
-              a.estado === "Concluída"
-                ? "bg-green-200 text-green-800"
-                : a.estado === "Pendente"
-                ? "bg-yellow-200 text-yellow-800"
-                : "bg-red-200 text-red-800"
-            }`}
-          >
-            {a.estado}
+    <div className="px-2 sm:px-4 lg:px-20 mt-6">
+      <div className="bg-white rounded-2xl p-8 space-y-10 mt-8">
+       
+        <div className="flex items-center gap-2 mb-6">
+          <span className="text-xl flex items-center justify-center">
+            <HiCalendar />
           </span>
+          <h1 className="text-xl font-bold">
+            Meus agendamentos
+          </h1>
         </div>
 
-        <div className="flex items-center space-x-2 text-gray-700 mb-1">
-          <svg
-            className="w-5 h-5 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M17.657 16.657L13.414 12l4.243-4.243M6.343 7.343L10.586 12l-4.243 4.243"
-            />
-          </svg>
-          <span>{a.local_doacao}</span>
+        <div className="pt-12 pb-10 px-10 rounded-xl shadow space-y-6">
+          <div className="flex items-center gap-2 mb-6">
+            <span className="text-lg flex items-center justify-center">
+              <HiClipboardList />
+            </span>
+            <h1 className="text-lg font-bold">
+              Pedido de agendamento
+            </h1>
+          </div>
+
+          
+          {!proximoAgendamento && (
+            <div className="text-center p-6 space-y-4">
+               <div className="flex justify-center">
+                <FaTint className="text-red-500 w-12 h-12" />
+              </div>
+              <p className="text-gray-500"> Você ainda não tem agendamentos pendentes.</p>
+              
+              <Button
+                onClick={() => setMostrarModal(true)}
+                className="bg-red-600 hover:bg-red-700 text-white py-2 px-6 font-semibold rounded-md"
+              >
+                Agendar
+              </Button>
+            </div>
+          )}
+
+    
+          {proximoAgendamento && (
+            <Card className="rounded-xl shadow-lg pt-4 ">
+             <div className="p-4 space-y-4">
+              <div className="flex items-center gap-2 mb-2">
+                <HiClock className="text-amber-500 w-6 h-6" />
+                <h2 className="text-lg font-bold text-amber-700">Aguardando sua confirmação</h2>
+              </div>
+
+               <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border">
+        
+            <p className="text-gray-700">
+              A sua doação está agendada para o dia{" "}
+              <span className="font-semibold">{proximoAgendamento.data_agendamento}</span>{" "}
+              às{" "}
+              <span className="font-semibold">{formatarHora(proximoAgendamento.horario)}</span>{" "}
+              no{" "}
+              <span className="font-semibold">{proximoAgendamento.local_doacao}</span>.
+            </p>
+          </div>
+
+
+                {proximoAgendamento.obs && (
+                  <div className="flex gap-2 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400 text-blue-700">
+                    <HiInformationCircle className="w-5 h-5 mt-0.5" />
+                    <p><strong>Observação:</strong> {proximoAgendamento.obs}</p>
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row justify-center gap-4">
+                  <Button
+                    className="bg-green-600 hover:bg-green-700 text-white py-2 px-6 font-semibold rounded-md flex items-center gap-2"
+                    onClick={() => handleAgendamentoResponse(proximoAgendamento.id_agendamento, "Confirmado")}
+                  >
+                    <HiCheck /> Aceitar
+                  </Button>
+
+                  <Button
+                    className="bg-red-600 border-2 hover:bg-red-500 text-white  py-2 px-6 font-semibold rounded-md flex items-center gap-2"
+                    onClick={() => handleAgendamentoResponse(proximoAgendamento.id_agendamento, "Recusado")}
+                  >
+                    <HiX /> Recusar
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          )}
         </div>
 
-        {a.obs && (
-          <p className="text-sm text-gray-600 mt-2 italic border-l-2 border-gray-300 pl-2">
-            {a.obs}
-          </p>
+        
+
+   
+        {mostrarModal && (
+          <Modal mostrar={mostrarModal} fechar={() => setMostrarModal(false)} titulo="Agendar nova doação">
+             
+              <p className="text-sm text-gray-500 text-center ">Escolha uma data, hora e local disponíveis.</p>
+
+                 {alert && (
+                    <div className="fixed top-5 right-5 z-50">
+                      <AlertCard
+                        type={alert.type}
+                        message={alert.message}
+                        onClose={() => setAlert(null)}
+                      />
+                    </div>
+                  )}
+
+              <form onSubmit={handleSubmit(handleSubmitAgendamento)} className="space-y-4 p-4 m-6">
+               <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col">
+                  <label htmlFor="data_agendamento" className="text-gray-600 font-medium mb-1">Data do agendamento</label>
+                  <Input
+                    id="data_agendamento"
+                    type="date"
+                    {...register("data_agendamento")}
+                    error={errors.data_agendamento?.message}
+                  />
+                </div>
+
+                <div className="flex flex-col">
+                  <label htmlFor="horario" className="text-gray-600 font-medium mb-1">Horário</label>
+                  <Input
+                    id="horario"
+                    type="time"
+                    {...register("horario")}
+                    error={errors.horario?.message}
+                  />
+                </div>
+                <div className="flex flex-col mt-4">
+                <label htmlFor="local_doacao" className="text-gray-600 font-medium mb-1">Local da doação</label>
+                <Select
+                  id="local_doacao"
+                  {...register("local_doacao")}
+                  error={errors.local_doacao?.message}
+                >
+                  <option value="">Selecione o local</option>
+                  <option value="Hospital Dr. Agostinho Neto">Hospital Dr. Agostinho Neto</option>
+                  <option value="Hospital Batista de Sousa">Hospital Batista de Sousa</option>
+                </Select>
+              </div>
+              </div>
+
+              
+
+              <div className="flex flex-col mt-4">
+                <label htmlFor="obs" className="text-gray-600 font-medium mb-1">Observação</label>
+                <Textarea
+                  id="obs"
+                  {...register("obs")}
+                  placeholder="Observações (opcional)"
+                  error={errors.obs?.message}
+                />
+              </div>
+
+                <Button className="bg-green-600 mt-4 py-2 px-6 text-white font-semibold transition duration-150 rounded-md max-w-xs mx-auto block">
+                  Solicitar Agendamento
+                </Button>
+              </form>
+
+           
+          </Modal>
         )}
+
       </div>
-    ))
-  )}
-</Card>
-
-
     </div>
+    
   );
 };
 
+
 export default AgendamentoDoador;
-/*<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {cards.map((card, index) => (
-          <div 
-            key={index} 
-            className={`flex items-center p-6 rounded-xl shadow-lg ${card.bg} text-white transition-transform hover:scale-105`}
-          >
-            <div className="p-4 rounded-full bg-white/20 mr-4">
-              {card.icon}
+
+/**
+<Card className="p-6 rounded-xl shadow">
+        <h2 className="text-xl font-bold mb-6">Histórico de Agendamentos</h2>
+
+        {history.slice(0, visibleCount).map((a) => (
+          <div key={a.id_agendamento} className="p-4 mb-4 rounded-lg bg-gray-50 border hover:bg-gray-100">
+            <div className="flex justify-between items-center mb-2">
+              <div className="flex gap-4 text-gray-700">
+                <span className="flex items-center gap-1"><HiCalendar /> {a.data_agendamento}</span>
+                <span className="flex items-center gap-1"><HiClock /> {a.horario}</span>
+              </div>
+              <StatusBadge estado={a.estado} />
             </div>
-            <div>
-              <p className="text-2xl font-bold">{card.value}</p>
-              <p className="text-sm opacity-80">{card.title}</p>
-            </div>
+
+            <p className="flex items-center gap-1 text-gray-700"><HiLocationMarker /> {a.local_doacao}</p>
+            {a.obs && <p className="text-sm italic text-gray-600 mt-2 border-l-2 pl-2">{a.obs}</p>}
           </div>
         ))}
-      </div>*/
+
+        {visibleCount < history.length && (
+          <div className="text-center mt-4">
+            <Button className="bg-gray-200 hover:bg-gray-300 px-6" onClick={() => setVisibleCount(v => v + ITEMS_PER_PAGE)}>Mostrar mais</Button>
+          </div>
+        )}
+      </Card>
+    </div>
+    
+
+ 
+const InfoItem = ({ icon, label, value }) => (
+  <div className="p-4 bg-gray-50 rounded-lg border">
+    <span className="text-xs font-bold uppercase text-gray-500 flex items-center gap-1">{icon} {label}</span>
+    <p className="font-semibold">{value}</p>
+  </div>
+);
+
+
+const StatusBadge = ({ estado }) => {
+  const styles = {
+    confirmado: "bg-green-200 text-green-800",
+    aguardando_resposta: "bg-amber-200 text-amber-800",
+    recusado: "bg-red-200 text-red-800",
+  };
+  return <span className={`px-3 py-1 text-xs font-bold rounded-full ${styles[estado] || "bg-gray-200"}`}>{estado.replace("_", " ")}</span>;
+};
+
+    */
