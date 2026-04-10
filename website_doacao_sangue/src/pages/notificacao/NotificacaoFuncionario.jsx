@@ -106,7 +106,7 @@ const NotificacaoFuncionario = () => {
 
         {/* Filtros */}
         <div className="flex gap-3">
-          <button
+          <Button
             onClick={() => setFiltro("todas")}
             className={`px-5 py-2 text-sm font-medium rounded-2xl transition ${
               filtro === "todas" 
@@ -115,8 +115,8 @@ const NotificacaoFuncionario = () => {
             }`}
           >
             Todas
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setFiltro("funcionario")}
             className={`px-5 py-2 text-sm font-medium rounded-2xl transition ${
               filtro === "funcionario" 
@@ -125,7 +125,7 @@ const NotificacaoFuncionario = () => {
             }`}
           >
             Enviadas por Mim
-          </button>
+          </Button>
         </div>
 
         {/* Alert */}
@@ -145,7 +145,7 @@ const NotificacaoFuncionario = () => {
             <p className="text-center py-12 text-gray-600">Carregando notificações...</p>
           ) : notificacoesFiltradas.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <HiBell className="text-6xl text-gray-300 mb-4" />
+            
               <h3 className="text-xl font-medium text-gray-700">Nenhuma notificação encontrada</h3>
               <p className="text-gray-600 mt-2">Tente alterar os filtros ou a pesquisa.</p>
             </div>
