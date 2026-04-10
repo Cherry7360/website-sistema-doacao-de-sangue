@@ -153,14 +153,19 @@ const DoadorFuncionario = () => {
         </div>
 
         <div className="md:col-span-2 space-y-4">
-          <div>
-            <p className="text-sm text-gray-500">Nome</p>
-            <p className="text-base font-semibold text-gray-800">
-              {doadorSelecionado.Usuario?.nome || "-"}
-            </p>
-          </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+               <div className="mt-2"> 
+                <p className="text-sm text-gray-500">Nome</p>
+                <p className="text-base font-semibold text-gray-800">
+                  {doadorSelecionado.Usuario?.nome || "-"}
+                </p>
+              </div>
+              <div className="mt-2">
+              <p className="text-sm text-gray-500 flex items-center gap-1">
+                 Código
+              </p>
+              <p className="font-medium">{doadorSelecionado.Usuario?.codigo_usuario || "-"}</p>
+            </div>
             <div className="mt-2">
               <p className="text-sm text-gray-500 flex items-center gap-1">
                 <HiBriefcase /> Profissão

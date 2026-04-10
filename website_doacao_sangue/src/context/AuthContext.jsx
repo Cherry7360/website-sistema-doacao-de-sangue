@@ -18,13 +18,11 @@ export const AuthProvider = ({ children }) => {
     const decoded = jwtDecode(token);
     setUsuario({ id: decoded.id, codigo: decoded.codigo, role: decoded.tipo });
   };
-
   // Função para deslogar o usuário e remover o token do localStorage
   const logout = () => {
     localStorage.removeItem("token");
     setUsuario(null);
   };
-
   return (
     <AuthContext.Provider value={{ usuario, login, logout }}>
       {children}

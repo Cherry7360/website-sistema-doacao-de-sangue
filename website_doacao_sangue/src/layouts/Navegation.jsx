@@ -4,7 +4,7 @@ import {
   HiSpeakerphone,
   HiCalendar,
   HiBell,
-  HiUsers
+  HiUsers,HiArchive
 } from "react-icons/hi";
 
 export const NavItems = [
@@ -12,7 +12,7 @@ export const NavItems = [
     name: "Dashboard",
     path: "/dashboard",
     icon: <HiHome />,
-    roles: ["admin"],
+    roles: ["admin","funcionario"],
   },
    {
     name: "Usuários",
@@ -44,6 +44,13 @@ export const NavItems = [
     icon: <HiSpeakerphone />,
     roles: ["admin", "funcionario"],
   },
+ {
+    name: "Estoque",
+    path: "/estoque",
+    icon:<HiArchive/>,
+    roles: ["admin", "funcionario"],
+  },
+
   {
     name: "Notificações",
     path: "/notificacoes/funcionario",

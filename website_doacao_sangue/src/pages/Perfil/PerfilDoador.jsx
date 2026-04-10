@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { HiPencil,HiBriefcase, HiMail, HiPhone, HiLocationMarker, HiLockClosed,HiUser } from "react-icons/hi";
+import {  HiArrowsExpand, HiScale, HiHeart ,HiPencil,HiBriefcase, HiMail, HiPhone, HiLocationMarker, HiLockClosed,HiUser } from "react-icons/hi";
 import Modal from "../../components/Modal";
-import Card from "../../components/Cards";
 import Button from "../../components/Button"
 import Input from "../../components/Input";
 import { useForm } from "react-hook-form";
@@ -136,105 +135,125 @@ const onSubmitPalavraPasse = async (data) => {
 
 
   return (
-      <div className="px-2 sm:px-4 lg:px-20 mt-6">
-        <div className="bg-white rounded-2xl  p-8 space-y-8 mt-8">
-          <div className="flex items-center gap-2 mb-6">
-            <span className="text-xl flex items-center justify-center">
-              <HiUser />
-            </span>
-            <h1 className="text-xl font-bold">
-              Meu perfil
-            </h1>
-          </div>
+    <div className="px-4 sm:px-6 lg:px-20 mt-6">
+      <div className="bg-white rounded-2xl p-8 space-y-10">
 
-      <Card className="bg-white p-6 rounded-2xl shadow flex flex-col">
-        <div className="flex items-center gap-4 w-full">
+        {/* Título */}
+        <div className="flex items-center gap-3">
+         <h1 className="text-2xl font-semibold text-gray-800">Meu Perfil</h1>
+        </div>
 
+        {/* Card Principal do Usuário */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-8 flex flex-col md:flex-row items-center gap-6">
           <img
-            src={`http://localhost:5080/${perfil?.Usuario?.foto}`}
-            className="w-20 h-20 rounded-full object-cover border-2 border-gray-300"
+            src={`http://localhost:5080/${perfil?.Usuario?.foto || ''}`}
+            className="w-28 h-28 rounded-full object-cover border-2 border-gray-300"
+            alt="Foto de perfil"
           />
-
-          <div>
-            <h2 className="text-xl font-semibold">{perfil.Usuario.nome}</h2>
-            <p className="text-gray-600">
+          <div className="flex-1">
+            <h2 className="text-2xl font-semibold text-gray-800">{perfil.Usuario.nome}</h2>
+            <p className="text-gray-600 mt-1">
               Tipo Sanguíneo: <span className="font-medium">{perfil.tipo_sangue}</span>
             </p>
           </div>
-
           <Button
             onClick={() => setUpdateFoto(true)}
-            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 ml-auto"
+            className="bg-blue-500 hover:bg-blue-400 text-white px-6 py-2.5 text-sm font-medium rounded-xl flex items-center gap-2"
           >
-              <HiPencil size={18} />
-          </Button>
-       
-        </div>
-
-                
-        
-      </Card>
-
-    <Card className="bg-white p-6 rounded-2xl shadow">
-       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-gray-800">Informações Pessoais</h2> 
-         <Button
-            onClick={() => setUpdateDados(true)}
-            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 ml-auto"
-          >
-              <HiPencil size={18} />
+            Alterar foto
           </Button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="flex items-center gap-2">
-            <HiBriefcase className="w-5 h-5 text-gray-400" />
-            <div>
-              <p className="text-sm text-gray-500">Profissão</p>
-              <p className="font-medium">{perfil.profissao}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <HiMail className="w-5 h-5 text-gray-400" />
-            <div>
-              <p className="text-sm text-gray-500">Email</p>
-              <p className="font-medium">{perfil.Usuario.email}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <HiPhone className="w-5 h-5 text-gray-400" />
-            <div>
-              <p className="text-sm text-gray-500">Telefone</p>
-              <p className="font-medium">{perfil.Usuario.telefone}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <HiLocationMarker className="w-5 h-5 text-gray-400" />
-            <div>
-              <p className="text-sm text-gray-500">Morada</p>
-              <p className="font-medium">{perfil.Usuario.morada}</p>
-            </div>
-            </div>
-          <div className="flex items-center gap-2">
-            <HiLockClosed className="w-5 h-5 text-gray-400" />
-            <div>
-              <p className="text-sm text-gray-500">Senha</p>
-              <Button 
-                onClick={() => setUpdatePalavrapasse
-             (true)} 
-                className="text-blue-600 hover:underline text-sm"
-              >
-                Alterar senha
-              </Button>
-            </div>
-             </div>
 
+        {/* Informações Pessoais */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-8">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-xl font-semibold text-gray-800">Informações Pessoais</h2>
+            <Button
+              onClick={() => setUpdateDados(true)}
+              className="bg-blue-500 hover:bg-blue-400 text-white px-6 py-2 text-sm font-medium rounded-xl"
+            >
+              Editar
+            </Button>
           </div>
-    </Card>
- 
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-7">
+            <div className="flex items-center gap-3">
+              <HiBriefcase className="w-5 h-5 text-gray-400" />
+              <div>
+                <p className="text-sm text-gray-500">Profissão</p>
+                <p className="font-medium text-gray-800">{perfil.profissao || "—"}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <HiMail className="w-5 h-5 text-gray-400" />
+              <div>
+                <p className="text-sm text-gray-500">Email</p>
+                <p className="font-medium text-gray-800">{perfil.Usuario.email}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <HiPhone className="w-5 h-5 text-gray-400" />
+              <div>
+                <p className="text-sm text-gray-500">Telefone</p>
+                <p className="font-medium text-gray-800">{perfil.Usuario.telefone}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <HiLocationMarker className="w-5 h-5 text-gray-400" />
+              <div>
+                <p className="text-sm text-gray-500">Morada</p>
+                <p className="font-medium text-gray-800">{perfil.Usuario.morada}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <HiLockClosed className="w-5 h-5 text-gray-400" />
+              <div>
+                <p className="text-sm text-gray-500">Senha</p>
+                <Button
+                  onClick={() => setUpdatePalavraPasse(true)}
+                  className="text-blue-600 hover:underline text-sm mt-1 p-0"
+                >
+                  Alterar senha
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Informações de Saúde */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-8">
+          <h2 className="text-xl font-semibold text-gray-800 mb-8">Informações de Saúde</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="flex items-center gap-3">
+              <HiArrowsExpand className="w-5 h-5 text-gray-400" />
+              <div>
+                <p className="text-sm text-gray-500">Altura</p>
+                <p className="text-2xl font-semibold text-gray-800">{perfil.altura_cm} cm</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <HiScale className="w-5 h-5 text-gray-400" />
+              <div>
+                <p className="text-sm text-gray-500">Peso</p>
+                <p className="text-2xl font-semibold text-gray-800">{perfil.peso_kg} Kg</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <HiHeart className="w-5 h-5 text-gray-400" />
+              <div>
+                <p className="text-sm text-gray-500">Tensão Arterial</p>
+                <p className="font-medium text-gray-800">{perfil.tensao_arterial || "—"}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+  
+    
 
      
-        <Modal mostrar={updateDados} fechar={() => setUpdateDados(false)} titulo="Alterar Perfil">
+      <Modal mostrar={updateDados} fechar={() => setUpdateDados(false)} titulo="Alterar Perfil">
         <form onSubmit={handleSubmitDados(onSubmitDados)} className="space-y-4 w-full max-w-2xl mx-auto">
             <div className=" rounded-lg p-5 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

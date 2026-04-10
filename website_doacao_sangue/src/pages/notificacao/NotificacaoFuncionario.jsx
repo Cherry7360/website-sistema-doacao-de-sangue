@@ -1,35 +1,25 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { HiSearch } from "react-icons/hi";
 import Modal from "../../components/Modal";
 import Button from "../../components/Button";
 import Input from "../../components/Input";
 import Select from "../../components/Select";
 import Textarea from "../../components/Textarea";
 import AlertCard from "../../components/AlertCard";
-import {  HiBell,HiCheckCircle,HiSearch   } from "react-icons/hi"; 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { notificacaoSchema } from "../../validations/notificacaoSchema";
 
 const BASE_URL = "http://localhost:5080/notificacoes";
 
-// Componente que gerencia e exibe as notificações para funcionários
-
 const NotificacaoFuncionario = () => {
-  const tiposNotificacao = {
-    agendamento: { nome: "Agendamento", cor: "bg-blue-100" },
-    campanha: { nome: "Campanha", cor: "bg-red-100" },
-    urgente: { nome: "Urgente", cor: "bg-yellow-100" },
-    resposta: { nome: "Resposta", cor: "bg-green-100" },
-    geral: { nome: "Geral", cor: "bg-gray-100" },
-  };
-
   const [search, setSearch] = useState("");
   const [mostrar, setMostrar] = useState(false);
   const [notificacoes, setNotificacoes] = useState([]);
   const [loading, setLoading] = useState(true);
-const [filtro, setFiltro] = useState("todas"); // 'todas', 'funcionario', 'sistema'
-  const [alert, setAlert] = useState(null); 
+  const [filtro, setFiltro] = useState("todas");
+  const [alert, setAlert] = useState(null);
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: zodResolver(notificacaoSchema),
@@ -37,12 +27,10 @@ const [filtro, setFiltro] = useState("todas"); // 'todas', 'funcionario', 'siste
 
   const token = localStorage.getItem("token");
 
-  // Hook que chama a função de busca de notificações ao carregar o componente
   useEffect(() => {
     fetchNotificacoes();
   }, []);
 
-  // Função que busca todas as notificações do funcionário
   const fetchNotificacoes = async () => {
     setLoading(true);
     try {
@@ -57,185 +45,183 @@ const [filtro, setFiltro] = useState("todas"); // 'todas', 'funcionario', 'siste
     }
   };
 
-  // Função que envia uma nova notificação
   const onSubmit = async (data) => {
     try {
       await axios.post(`${BASE_URL}`, data, {
         headers: { Authorization: `Bearer ${token}` },
       });
-    setAlert({ type: "success", message: `Notificação enviada com sucesso!` });
-
+      
+      setAlert({ type: "success", message: "Notificação enviada com sucesso!" });
       reset();
       setMostrar(false);
-      fetchNotificacoes(); 
+      fetchNotificacoes();
     } catch (err) {
       console.error("Erro ao enviar notificação:", err);
-      alert("Erro ao enviar notificação.");
+      setAlert({ type: "error", message: "Erro ao enviar notificação." });
     }
   };
 
-  // Função que filtra notificações com base no termo de busca
-const notificacoesFiltradas = notificacoes
-  .filter((n) =>
-    n.titulo.toLowerCase().includes(search.toLowerCase()) ||
-    n.mensagem.toLowerCase().includes(search.toLowerCase())
-  )
-  .filter((n) => {
-    if (filtro === "todas") return true;
-    if (filtro === "funcionario") return n.id_funcionario !== null;
-    return true;
-  })
-  .sort((a, b) => new Date(b.data_envio + " " + b.hora_envio) - new Date(a.data_envio + " " + a.hora_envio));
+  const notificacoesFiltradas = notificacoes
+    .filter((n) =>
+      n.titulo.toLowerCase().includes(search.toLowerCase()) ||
+      n.mensagem.toLowerCase().includes(search.toLowerCase())
+    )
+    .filter((n) => {
+      if (filtro === "todas") return true;
+      if (filtro === "funcionario") return n.id_funcionario !== null;
+      return true;
+    })
+    .sort((a, b) => new Date(b.data_envio + " " + b.hora_envio) - new Date(a.data_envio + " " + a.hora_envio));
 
-
-  
   return (
-   <div className="px-2 sm:px-4 lg:px-20 mt-6 flex flex-col h-full">
+    <div className="px-4 sm:px-6 lg:px-20 mt-6">
+      <div className="bg-white rounded-2xl p-8 space-y-8">
 
-  {/* Cabeçalho */}
-  <div className="bg-white rounded-2xl p-4 space-y-8 mt-8">
-    <div className="flex items-center justify-between mb-6">
-      <div className="flex items-center gap-2">
-        <span className="text-xl flex items-center justify-center">
-          <HiBell />
-        </span>
-        <h1 className="text-xl font-bold">Notificações</h1>
-      </div>
-
-      <Button
-        onClick={() => setMostrar(true)}
-        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium"
-      >
-        Nova notificação
-      </Button>
-    </div>
-  </div>
-
-  {/* Barra de pesquisa */}
-  <div className="relative mb-4">
-    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-      <HiSearch/>
-    </span>
-    <Input
-      type="text"
-      placeholder="Pesquisar notificações"
-      value={search}
-      onChange={(e) => setSearch(e.target.value)}
-      className="pl-10 w-full border border-gray-300 rounded-lg"
-    />
-  </div>
-
-  {/* Filtros */}
-  <div className="flex gap-2 mb-6">
-    <button
-      onClick={() => setFiltro("todas")}
-      className={`px-3 py-1 text-sm rounded-full ${
-        filtro === "todas" ? "bg-red-600 text-white" : "bg-gray-100 text-gray-700"
-      }`}
-    >
-      Todas
-    </button>
-
-    <button
-      onClick={() => setFiltro("funcionario")}
-      className={`px-3 py-1 text-sm rounded-full ${
-        filtro === "funcionario" ? "bg-green-600 text-white" : "bg-gray-100 text-gray-700"
-      }`}
-    >
-      Enviadas
-    </button>
-  </div>
-
-   {alert && (
-    <div className="fixed top-5 right-5 z-50">
-      <AlertCard
-        type={alert.type}
-        message={alert.message}
-        onClose={() => setAlert(null)}
-      />
-    </div>
-  )}
-
-  {/* Lista de notificações com scroll interno */}
-  <div className="flex-1 overflow-y-auto mt-2">
-    {loading ? (
-      <p className="text-center text-gray-600">Carregando notificações...</p>
-    ) : notificacoesFiltradas.length === 0 ? (
-      <div className="flex flex-col items-center justify-center h-64 text-center space-y-3">
-        <h4 className="text-2xl font-bold mb-4">Sem notificações</h4>
-      </div>
-    ) : (
-       <div className="relative overflow-x-auto shadow-md rounded-lg flex-1 max-h-[500px]">
-      <ul className="flex flex-col gap-3">
-        {notificacoesFiltradas.map((n) => (
-          <li key={n.id_notificacao} className="p-4 rounded-xl shadow-md flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <p className="font-semibold">{n.titulo}</p>
-            </div>
-            <p className="text-gray-700">{n.mensagem}</p>
-            <div className="text-gray-700 text-sm flex gap-2">
-              <span>{n.data_envio}</span>
-              <span>às {n.hora_envio}</span>
-            </div>
-          </li>
-        ))}
-      </ul>
-      </div>
-    )}
-  </div>
-
-  {/* Modal de envio */}
-  <Modal mostrar={mostrar} fechar={() => setMostrar(false)} titulo="Enviar para doador">
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 w-full max-w-2xl mx-auto">
-      <p className="text-sm text-gray-500 text-center">
-        Enviar uma notificação diretamente para um doador específico.
-      </p>
-
-      <div className="grid grid-cols-2 gap-4 pt-2">
-        <div>
-          <Input
-            type="number"
-            label="ID do doador"
-            placeholder="123"
-            {...register("id_doador")}
-            error={errors.id_doador?.message}
-          />
+        {/* Cabeçalho */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-semibold text-gray-800">Notificações</h1>
+          </div>
+          <Button
+            onClick={() => setMostrar(true)}
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-medium"
+          >
+            Nova Notificação
+          </Button>
         </div>
-        <div>
+
+        {/* Barra de Pesquisa */}
+        <div className="relative">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+            <HiSearch className="text-xl" />
+          </span>
           <Input
             type="text"
-            label="Titulo"
-            placeholder="Nova campanha"
-            {...register("titulo")}
-            error={errors.titulo?.message}
+            placeholder="Pesquisar notificações..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-12 py-3 border border-gray-300 rounded-2xl w-full"
           />
         </div>
-        <div>
-          <Select label="Tipo" {...register("tipo")}>
-            <option value="">Selecionar</option>
-            <option value="agendamento">Agendamento</option>
-            <option value="campanha">Campanha</option>
-            <option value="urgente">Urgente</option>
-            <option value="resposta">Resposta</option>
-            <option value="geral">Geral</option>
-          </Select> 
+
+        {/* Filtros */}
+        <div className="flex gap-3">
+          <button
+            onClick={() => setFiltro("todas")}
+            className={`px-5 py-2 text-sm font-medium rounded-2xl transition ${
+              filtro === "todas" 
+                ? "bg-gray-800 text-white" 
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            Todas
+          </button>
+          <button
+            onClick={() => setFiltro("funcionario")}
+            className={`px-5 py-2 text-sm font-medium rounded-2xl transition ${
+              filtro === "funcionario" 
+                ? "bg-gray-800 text-white" 
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            Enviadas por Mim
+          </button>
+        </div>
+
+        {/* Alert */}
+        {alert && (
+          <div className="fixed top-5 right-5 z-50">
+            <AlertCard
+              type={alert.type}
+              message={alert.message}
+              onClose={() => setAlert(null)}
+            />
+          </div>
+        )}
+
+        {/* Lista de Notificações */}
+        <div className="flex-1 overflow-y-auto">
+          {loading ? (
+            <p className="text-center py-12 text-gray-600">Carregando notificações...</p>
+          ) : notificacoesFiltradas.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <HiBell className="text-6xl text-gray-300 mb-4" />
+              <h3 className="text-xl font-medium text-gray-700">Nenhuma notificação encontrada</h3>
+              <p className="text-gray-600 mt-2">Tente alterar os filtros ou a pesquisa.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {notificacoesFiltradas.map((n) => (
+                <div
+                  key={n.id_notificacao}
+                  className="p-6 bg-white border border-gray-200 rounded-2xl hover:shadow-md transition"
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="font-semibold text-gray-800">{n.titulo}</p>
+                      <p className="text-gray-700 mt-2 leading-relaxed">{n.mensagem}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 text-sm text-gray-500">
+                    {n.data_envio} às {n.hora_envio}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      <Textarea
-        label="Mensagem"
-        {...register("mensagem")}
-        error={errors.mensagem?.message}
-      />
-      {errors.tipo && <p className="text-red-600">{errors.tipo.message}</p>}
+      {/* Modal para Enviar Nova Notificação */}
+      <Modal mostrar={mostrar} fechar={() => setMostrar(false)} titulo="Enviar Nova Notificação">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <p className="text-sm text-gray-600 text-center">
+            Envie uma notificação diretamente para um doador específico.
+          </p>
 
-      <Button type="submit" className="bg-green-600 mt-4 py-2 px-6 text-white font-semibold transition duration-150 rounded-md max-w-xs mx-auto block">
-        Enviar
-      </Button>
-    </form>
-  </Modal>
-</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Input
+              type="number"
+              label="ID do Doador"
+              placeholder="Ex: 123"
+              {...register("id_doador")}
+              error={errors.id_doador?.message}
+            />
+            <Input
+              type="text"
+              label="Título"
+              placeholder="Nova campanha de doação"
+              {...register("titulo")}
+              error={errors.titulo?.message}
+            />
+            <Select label="Tipo de Notificação" {...register("tipo")}>
+              <option value="">Selecione o tipo</option>
+              <option value="agendamento">Agendamento</option>
+              <option value="campanha">Campanha</option>
+              <option value="urgente">Urgente</option>
+              <option value="resposta">Resposta</option>
+              <option value="geral">Geral</option>
+            </Select>
+          </div>
 
+          <Textarea
+            label="Mensagem"
+            placeholder="Escreva a mensagem da notificação..."
+            {...register("mensagem")}
+            error={errors.mensagem?.message}
+          />
+
+          <div className="flex justify-center pt-4">
+            <Button 
+              type="submit" 
+              className="bg-green-600 hover:bg-green-700 text-white px-10 py-3 rounded-xl font-medium"
+            >
+              Enviar Notificação
+            </Button>
+          </div>
+        </form>
+      </Modal>
+    </div>
   );
 };
 

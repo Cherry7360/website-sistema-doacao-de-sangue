@@ -143,13 +143,13 @@ const handleConfirmDelete = async () => {
     </div>
   )}
 
-<ConfirmModal
-  aberto={confirmDelete.aberto}
-  titulo="Confirmação de exclusão"
-  mensagem="Tem certeza que deseja remover este usuário?"
-  onConfirm={handleConfirmDelete}
-  onCancel={() => setConfirmDelete({ aberto: false, userId: null })}
-/>
+  <ConfirmModal
+    aberto={confirmDelete.aberto}
+    titulo="Confirmação de exclusão"
+    mensagem="Tem certeza que deseja remover este usuário?"
+    onConfirm={handleConfirmDelete}
+    onCancel={() => setConfirmDelete({ aberto: false, userId: null })}
+  />
      <div className="relative overflow-x-auto shadow-md rounded-lg flex-1 max-h-[500px]">
             <table className="min-w-full text-sm text-left text-gray-700 border border-gray-300">
               <thead className="bg-gray-100 text-gray-700 uppercase text-xs tracking-wider">

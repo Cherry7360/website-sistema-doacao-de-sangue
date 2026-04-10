@@ -1,24 +1,25 @@
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
-const CORES = ["#6ee7b7", "#fca5a5"]; // Azul = Masculino, Vermelho = Feminino
+const CORES = ["#3b82f6", "#ec4899"]; // Azul = Masculino, Rosa = Feminino
 
 export default function GraficoCircular({ doadores }) {
-  const dados = doadores && doadores.length
-    ? doadores
+  const dados = doadores && doadores.length > 0 
+    ? doadores 
     : [
         { name: "Homem", value: 0 },
         { name: "Mulher", value: 0 },
       ];
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow w-full">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">
+    <div className="bg-white rounded-3xl p-8 shadow-sm h-full">
+      <h2 className="text-xl font-semibold text-gray-800 mb-8">
         Distribuição de Doadores por Género
-      </h3>
+      </h2>
 
-      {/* Gráfico */}
-      <div className="flex flex-col lg:flex-row items-center gap-6">
-        <div className="w-full h-[320px]">
+      <div className="flex flex-col lg:flex-row items-center gap-10">
+        
+        {/* Gráfico */}
+        <div className="w-full max-w-[290px] h-[290px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -27,33 +28,41 @@ export default function GraficoCircular({ doadores }) {
                 nameKey="name"
                 cx="50%"
                 cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                paddingAngle={4}
-              
+                innerRadius={65}
+                outerRadius={110}
+                paddingAngle={5}
+               label={({ percent }) => ` ${(percent * 100).toFixed(1)}%`}
               >
                 {dados.map((entry, index) => (
-                  <Cell key={index} fill={CORES[index]} />
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={CORES[index % CORES.length]} 
+                  />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip 
+                formatter={(value) => [`${value} doadores`, "Quantidade"]}
+              />
             </PieChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Legenda */}
-        <div className="flex flex-col gap-2">
-          {dados.map((item, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <div
-                className="w-4 h-4 rounded-full"
-                style={{ backgroundColor: CORES[index] }}
-              ></div>
-              <span className="text-gray-700 font-medium">
-                {item.name} 
-              </span>
-            </div>
-          ))}
+        {/* Legenda*/}
+        <div className="flex">
+          <div className="space-y">
+            {dados.map((item, index) => (
+              <div key={index} className="flex items-center gap-3">
+                <div 
+                  className="w-4 h-4 "
+                  style={{ backgroundColor: CORES[index] }}
+                />
+                <div>
+                  <p className="font-medium text-gray-800">{item.name}</p>
+                 
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

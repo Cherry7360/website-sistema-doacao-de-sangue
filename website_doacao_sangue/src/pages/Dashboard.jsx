@@ -1,33 +1,36 @@
-import {HiTrendingUp, HiOutlineUsers, HiOutlineHeart, HiOutlineSpeakerphone, HiClock,HiOutlineViewGrid } from "react-icons/hi";
+import {HiOutlineCalendar,HiOutlineUserCircle, HiOutlineUsers, HiBeaker, HiOutlineSpeakerphone, HiClock,HiOutlineViewGrid } from "react-icons/hi";
 import { useEffect, useState } from "react";
 import Grafico from "../components/Grafico";
 import GraficoCircular from "../components/GraficoCircular";
-
-import GotaNivel from "../components/GotaNivel";
+import GraficoEstoque from "../components/GraficoEstoque";
 import axios from "axios";
+import Button from "../components/Button";
+
+import AlertCard from "../components/AlertCard";
 
 const BASE_URL  = "http://localhost:5080/dashboard";
-const MAX_DOACOES = 20;
 
 const Dashboard = () => {
 
  
   const [dados, setDados] = useState({
     totalDoadores: 0,
-    totalDoacoes: 0,
     totalFuncionarios: 0,
-    campanhasAtivas: 0,
-
-  });
+    });
    const [doacoes, setDoacoes] = useState([]);
-  const [campanhas, setCampanhas] = useState([]);
-  const [agendamentosHoje, setAgendamentosHoje] = useState([]);
-  const [doadores, setDoadores] = useState([]);
-const [estoqueSangue, setEstoqueSangue] = useState([]);
+   const [campanhas, setCampanhas] = useState([]);
+   const [doadores, setDoadores] = useState([]);
+
+  const [totaisEstoque, setTotaisEstoque]=useState({});
+  const [alert, setAlert] = useState(null);
+ 
+
+  const token = localStorage.getItem("token"); 
 
 
   useEffect(() => {
     fetchDashboard();
+    fetchDadosEstoque();
   }, []);
 
 
@@ -40,6 +43,7 @@ const [estoqueSangue, setEstoqueSangue] = useState([]);
       setDados({
         totalDoadores: res.data.totalDoadores,
         totalFuncionarios: res.data.totalFuncionarios,
+        totalCampanhas: res.data.campanhasAtivas
       });
       setDoacoes(res.data.doacoesPorAno || []);
       setCampanhas(res.data.campanhasPorAno || []);
@@ -47,46 +51,42 @@ const [estoqueSangue, setEstoqueSangue] = useState([]);
       { name: "Masculino", value: masculino },
       { name: "Feminino", value: feminino },
         ]);
-
-        console.log(res.data.estoqueSangue);
-        setEstoqueSangue(res.data.estoqueSangue || []);
+       
     } catch (err) {
       console.error("Erro ao carregar dados do dashboard:", err);
     }
   };
 
-  const estoqueConvertido = estoqueSangue.map(item => ({
-  tipo: item.tipo,
-  nivel: Math.min(Math.round((item.total / MAX_DOACOES) * 100), 100),
-}));
-  const Cards=({accentColor,
-      icon,
-      iconBg = "bg-gray-100",
-      iconColor = "text-gray-600",
-      title,
-      value,
-      subtitle,
-      highlight
-    }) => (  <div
-        className={`relative bg-white rounded-xl shadow-sm p-6 flex gap-4 
-        ${highlight ? "ring-2 ring-red-500" : ""}`}
-      >
-        <span className={`absolute left-0 top-0 h-full w-1 rounded-l-xl ${accentColor}`} />
-        <div
-          className={`flex items-center justify-center w-12 h-12 rounded-full ${iconBg}`}>
-          <span className={`text-xl ${iconColor}`}>
-            {icon}
-          </span>
-        </div>
+  const fetchDadosEstoque= async () => {
+      try {
+        const res = await axios.get(`http://localhost:5080/estoque/total`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setTotaisEstoque(res.data.totais);
+      } catch (err) {
+        console.error("Erro ao buscar total de estoque:", err);
+      }
+    };
+// funcao que envia notificacao por email quando ha grupo sanguineos em estado critico
+    const enviarNotificacao = async ()=>{
+  try {
+        const res = await axios.post(`http://localhost:5080/notificacoes/estoque-critico`, 
+           { tipos: criticos }, 
+          {
+          headers: { Authorization: `Bearer ${token}` }
+        });
 
-        <div>
-          <p className="text-sm text-gray-500">{title}</p>
-          <p className="text-2xl font-bold text-gray-800">{value}</p>
-          {subtitle && (
-            <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
-          )}
-        </div>
-  </div>)
+         setAlert({ type: "success", message: "notificação enviada com sucesso!" });
+    
+       console.log('notificacao estado critico para doadores')
+      } catch (err) {
+           setAlert({ type: "error", message: "Erro ao remover enviar notificacao!" });
+ 
+        console.error("Erro ao buscar total de estoque:", err);
+      }
+    };
+
+
 
     // Combinar doacoesPorAno e campanhasPorAno
     const combinarPorAno = () => {
@@ -110,71 +110,168 @@ const [estoqueSangue, setEstoqueSangue] = useState([]);
     };
 
 
-    const formatDateLocal = (dateStr) => {
-      if (!dateStr) return "—";
-      const [year, month, day] = dateStr.split("-"); // separa ano-mês-dia
-      const date = new Date(year, month - 1, day); // constrói data local
-      return date.toLocaleDateString("pt-PT", { day: "2-digit", month: "2-digit", year: "numeric" });
-    };
 
-  return (
-    <div className="px-4 lg:px-16 py-6 bg-gray-50 min-h-screen space-y-8">
+const criticos = Object.keys(totaisEstoque || {}).filter(
+  (tipo) => totaisEstoque[tipo]?.status === "critico"
+);
 
-  <div className="flex items-center gap-2 mb-4">
-    <HiOutlineViewGrid className="text-2xl text-gray-700" />
-    <h1 className="text-2xl font-bold">Dashboard</h1>
-  </div>
+const totalEstoque = Object.values(totaisEstoque || {}).reduce(
+  (acc, item) => acc + (item?.quantidade || 0),
+  0
+);
 
+ return (
+  <div className="px-4 sm:px-6 lg:px-20 py-8 bg-gray-50">
+      {alert && (
+          <div className="fixed top-5 right-5 z-50">
+            <AlertCard
+              type={alert.type}
+              message={alert.message}
+              onClose={() => setAlert(null)}
+            />
+          </div>
+        )}
+    <div className=" mx-auto space-y-10">
 
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 w-fit ">
-    <Cards
-      accentColor="bg-red-300"
-      icon={<HiOutlineUsers />}
-      iconBg="bg-red-200"
-      iconColor="text-red-600"
-      title="Total de doadores"
-      value={dados.totalDoadores || "—"}
-    />
-    <Cards
-      accentColor="bg-blue-300"
-      icon={<HiOutlineUsers />}
-      iconBg="bg-blue-200"
-      iconColor="text-blue-600"
-      title="Total de funcionários"
-      value={dados.totalFuncionarios || "—"}
-    />
-  </div>
+      {/* Cabeçalho */}
+      <div className="flex items-center gap-3">
+       <div>
+          <h1 className="text-3xl font-semibold text-gray-800">Dashboard</h1>
+          <p className="text-gray-600 text-sm">
+            Visão geral do sistema • {new Date().toLocaleDateString('pt-PT')}
+          </p>
+        </div>
+      </div>
 
+      {/* Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+        
+    
+        <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 hover:shadow transition-all">
+          <div className="flex items-center gap-4">
+            <div className="bg-emerald-100 text-emerald-600 rounded-xl p-3">
+              <HiOutlineUsers className="text-2xl" />
+            </div>
+            <div>
+              <p className="text-gray-500 text-xs font-medium">Doadores cadastrados</p>
+              <p className="text-3xl font-semibold text-gray-800 mt-1">
+                {dados.totalDoadores || "—"}
+              </p>
+            </div>
+          </div>
+        </div>
 
+        <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 hover:shadow transition-all">
+          <div className="flex items-center gap-4">
+            <div className="bg-blue-100 text-blue-600 rounded-xl p-3">
+              <HiOutlineUserCircle className="text-2xl" />
+            </div>
+            <div>
+              <p className="text-gray-500 text-xs font-medium">Funcionários ativos</p>
+              <p className="text-3xl font-semibold text-gray-800 mt-1">
+                {dados.totalFuncionarios || "—"}
+              </p>
+            </div>
+          </div>
+        </div>
 
+    
+        <div className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 hover:shadow transition-all">
+          <div className="flex items-center gap-4">
+            <div className="bg-amber-100 text-amber-600 rounded-xl p-3">
+              <HiOutlineCalendar className="text-2xl" />
+            </div>
+            <div>
+              <p className="text-gray-500 text-xs font-medium">Campanhas em andamento</p>
+              <p className="text-3xl font-semibold text-gray-800 mt-1">
+                {dados.totalCampanhas || "—"}
+              </p>
+            </div>
+          </div>
+        </div>
 
-  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-    <div className="lg:col-span-8 bg-white p-6 rounded-xl shadow-sm">
-      <Grafico
-        dados={combinarPorAno()}
-        titulo="Doações e Campanhas por Ano"
-        xKey="ano"
-        barras={[
-                  { chave: "doacoes", cor: "#fca5a5" }, 
-                  { chave: "campanhas", cor: "#6ee7b7" },]}
-        altura={320}
-        icone={<HiTrendingUp />}
-      />
+        <div className="bg-white rounded-2xl shadow-sm p-5 border border-violet-100 hover:shadow transition-all">
+          <div className="flex items-center gap-4">
+            <div className="bg-violet-100 text-violet-600 rounded-xl p-3">
+              <HiBeaker className="text-2xl" />
+            </div>
+            <div>
+              <p className="text-gray-500 text-xs font-medium">Estoque Total</p>
+              <p className="text-3xl font-semibold text-gray-800 mt-1">
+                {totalEstoque || "—"} <span className="text-base font-normal text-gray-500">ml</span>
+              </p>
+              <p className="text-[10px] text-gray-400 mt-1">Atualizado há 12 minutos</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        {/* Gráfico de Estoque por Tipo Sanguíneo */}
+        <div className="lg:col-span-8 bg-white rounded-3xl p-8 shadow-sm">
+          <h2 className="text-xl font-semibold text-gray-800 mb-6">Estado atual do estoque</h2>
+          <div className="  items-center">
+            <div >
+              <GraficoEstoque totaisEstoque={totaisEstoque || {}} />
+            </div>
+
+         
+          </div>
+        </div>
+
+        {/* Sugestão do Sistema */}
+        <div className="lg:col-span-4 bg-white rounded-3xl p-8 shadow-sm">
+          <h2 className="text-xl font-semibold text-gray-800 mb-6">Sugestão do Sistema</h2>
+          
+          {criticos.length > 0 ? (
+            <div className="space-y-5">
+              <div className="p-6 bg-red-50 border border-red-100 rounded-2xl">
+                <p className="font-medium text-red-800">Atenção: Estoque crítico</p>
+                <p className="text-sm text-red-700 mt-2">
+                  Tipos afetados: <strong>{criticos.join(", ")}</strong>
+                </p>
+              </div>
+              <Button className="bg-red-600 hover:bg-red-700 text-white px-6 py-3.5 rounded-2xl text-sm font-medium w-full"
+               onClick={enviarNotificacao}>
+                Enviar notificação aos doadores
+              </Button>
+            </div>
+          ) : (
+            <div className="p-8 bg-emerald-50 border border-emerald-100 rounded-2xl text-center">
+              <p className="text-emerald-700 font-medium">
+                Todos os tipos sanguíneos estão em níveis seguros.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Gráficos Inferiores*/}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-8 bg-white p-8 rounded-3xl shadow-sm">
+          <Grafico
+            dados={combinarPorAno()}
+            titulo="Doações e Campanhas por Ano"
+            xKey="ano"
+            barras={[
+              { chave: "doacoes", cor: "#10b981" },
+              { chave: "campanhas", cor: "#3b82f6" },
+            ]}
+            altura={340}
+          />
+        </div>
+
+        <div className="lg:col-span-4 bg-white p-8 rounded-3xl shadow-sm">
+          <GraficoCircular doadores={doadores} />
+        </div>
+      </div>
+
     </div>
-
-    <div className="lg:col-span-4 bg-white p-6 rounded-xl shadow-sm">
-      <GraficoCircular doadores={doadores} />
-    </div>
   </div>
-
-
-
-
-
-
-</div>
-
-  );
+);
 };
 
 export default Dashboard;

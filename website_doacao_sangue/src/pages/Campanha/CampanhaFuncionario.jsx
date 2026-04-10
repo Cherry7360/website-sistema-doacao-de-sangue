@@ -137,125 +137,135 @@ const CampanhaFuncionario = () => {
     }
   };
 
+
   return (
-  <div>
-      <div className="p-6 flex flex-col h-full">
+  <div className="px-4 sm:px-6 lg:px-20 py-8">
+    <div className="bg-white rounded-2xl shadow-sm p-8 min-h-[calc(100vh-100px)] flex flex-col">
 
-       
-        <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
-          <h2 className="text-xl font-bold">Lista campanhas</h2>
-          <Button
-            onClick={() => setMostrar(true)}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-          >
-            <HiOutlinePlus size={18} />
-            Adicionar
-          </Button>
-        </div>
+      {/* Cabeçalho */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <h2 className="text-2xl font-semibold text-gray-800">Lista de Campanhas</h2>
+        
+        <Button
+          onClick={() => setMostrar(true)}
+          className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-medium"
+        >
+          <HiOutlinePlus size={20} />
+          Nova Campanha
+        </Button>
+      </div>
 
-       
-        <div className="relative mb-4">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-            <HiSearch/>
-          </span>
+      {/* Barra de Pesquisa */}
+      <div className="relative mb-8">
+        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+          <HiSearch className="text-xl" />
+        </span>
+        <Input
+          type="text"
+          placeholder="Pesquisar campanhas..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-12 py-3.5 w-full border border-gray-300 rounded-2xl"
+        />
+      </div>
 
-          <Input
-            type="text"
-            placeholder="Pesquisar "
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 w-full border border-gray-300 rounded-lg"
+      {/* Alert */}
+      {alert && (
+        <div className="fixed top-6 right-6 z-50">
+          <AlertCard
+            type={alert.type}
+            message={alert.message}
+            onClose={() => setAlert(null)}
           />
         </div>
+      )}
 
-        {alert && (
-          <div className="fixed top-5 right-5 z-50">
-            <AlertCard
-              type={alert.type}
-              message={alert.message}
-              onClose={() => setAlert(null)}
-            />
+      {/* Conteúdo Principal */}
+      {loading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-lg text-gray-600">Carregando campanhas...</p>
+        </div>
+      ) : campanhas.length === 0 ? (
+        <div className="flex-1 flex items-center justify-center py-20">
+          <div className="text-center">
+            <h3 className="text-2xl font-medium text-gray-700 mb-3">Nenhuma campanha encontrada</h3>
+            <p className="text-gray-500">Ainda não existem campanhas cadastradas.</p>
           </div>
-        )}
-       
-        {loading ? (
-          <div className="flex flex-col items-center justify-center h-screen text-center space-y-3">
-            <h4 className="text-4xl font-bold mb-4">Carregando ...</h4>
-          </div>
-        ) : campanhas.length === 0 ? (
-           <div className="flex flex-col items-center justify-center h-64 text-center">
-            <h4 className="text-2xl font-bold">Nenhuma campanha encontrada</h4>
-          </div>
-        ) : (
-          <div className="relative overflow-x-auto shadow-md rounded-lg flex-1 max-h-[500px]">
-            <table className="min-w-full text-sm text-left text-gray-700 border border-gray-300">
-              <thead className="bg-gray-100 text-gray-700 uppercase text-xs tracking-wider">
+        </div>
+      ) : (
+        /* Tabela com melhor espaçamento */
+        <div className="flex-1 overflow-hidden border border-gray-200 rounded-2xl shadow-sm">
+          <div className="overflow-x-auto max-h-[calc(100vh-280px)]">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-gray-50 sticky top-0 z-20 border-b">
                 <tr>
-                  <th className="px-6 py-3 border-b">ID</th>
-                  <th className="px-6 py-3 border-b">Titulo</th>
-                  <th className="px-6 py-3 border-b">Descrição</th>
-                  <th className="px-6 py-3 border-b">Local</th>
-                  <th className="px-6 py-3 border-b">Data</th>
-                  <th className="px-6 py-3 border-b">Horário</th>
-                  <th className="px-6 py-3 border-b">Ações</th>
+                  <th className="px-6 py-4 font-medium text-gray-600">ID</th>
+                  <th className="px-6 py-4 font-medium text-gray-600">Título</th>
+                  <th className="px-6 py-4 font-medium text-gray-600">Descrição</th>
+                  <th className="px-6 py-4 font-medium text-gray-600">Local</th>
+                  <th className="px-6 py-4 font-medium text-gray-600">Data</th>
+                  <th className="px-6 py-4 font-medium text-gray-600">Horário</th>
+                  <th className="px-6 py-4 text-center font-medium text-gray-600">Ações</th>
                 </tr>
               </thead>
-              <tbody>
+
+              <tbody className="divide-y divide-gray-100">
                 {campanhasFiltradas.map((c) => (
-                  <tr key={c.id_campanha} className="bg-white border-b hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 font-medium text-gray-900">{c.id_campanha}</td>
-                     <td className="px-6 py-4 font-medium text-gray-900"> {c.titulo ?? "-"}</td>
-                    <td className="px-6 py-4 font-medium text-gray-900">{c.descricao}</td>
-                    <td className="px-6 py-4 font-medium text-gray-900">{c.local}</td>
-                    <td className="px-6 py-4 font-medium text-gray-900">{c.data_campanha}</td>
-                    <td className="px-6 py-4 font-medium text-gray-900">{c.horario}</td>
-                    <td className="px-6 py-4 font-medium text-gray-900 flex gap-2 flex-wrap">
-                      {!c.estado ? (
-                        <>
-                          <button
-                            onClick={() => atualizarEstado(c.id_campanha, true)}
-                            className="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700"
-                          >
-                            Ativar
-                          </button>
-                          <button
-                            onClick={() => removerCampanha(c.id_campanha)}
-                            className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700"
-                          >
-                            Remover
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => atualizarEstado(c.id_campanha, false)}
-                            className="bg-gray-500 text-white px-2 py-1 rounded hover:bg-gray-600"
-                          >
-                            Inativar
-                          </button>
-                          <button
-                            onClick={() => removerCampanha(c.id_campanha)}
-                            className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700"
-                          >
-                            Remover
-                          </button>
-                        </>
-                      )}
+                  <tr key={c.id_campanha} className="hover:bg-gray-50 transition">
+                    <td className="px-6 py-5 font-medium">{c.id_campanha}</td>
+                    <td className="px-6 py-5 font-medium text-gray-900">{c.titulo ?? "—"}</td>
+                    <td className="px-6 py-5 text-gray-700">{c.descricao}</td>
+                    <td className="px-6 py-5">{c.local}</td>
+                    <td className="px-6 py-5">{c.data_campanha}</td>
+                    <td className="px-6 py-5">{c.horario}</td>
+                    <td className="px-6 py-5">
+                      <div className="flex gap-2 justify-center flex-wrap">
+                        {!c.estado ? (
+                          <>
+                            <Button
+                              onClick={() => atualizarEstado(c.id_campanha, true)}
+                              className="bg-green-600 hover:bg-green-700 text-white  px-2 py-1 rounded"
+                            >
+                              Ativar
+                            </Button>
+                            <Button
+                              onClick={() => removerCampanha(c.id_campanha)}
+                              className="bg-red-600 hover:bg-red-700 text-white  px-2 py-1 rounded"
+                            >
+                              Remover
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              onClick={() => atualizarEstado(c.id_campanha, false)}
+                              className="bg-gray-500 hover:bg-gray-400 text-white  px-2 py-1 rounded"
+                            >
+                              Inativar
+                            </Button>
+                            <Button
+                              onClick={() => removerCampanha(c.id_campanha)}
+                              className="bg-red-600 hover:bg-red-700 text-white  px-2 py-1 rounded"
+                            >
+                              Remover
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      <Modal mostrar={mostrar} fechar={() => setMostrar(false)} titulo="Nova Campanha">
+      {/* Modal - Nova Campanha */}
+       <Modal mostrar={mostrar} fechar={() => setMostrar(false)} titulo="Nova Campanha">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 w-full max-w-2xl mx-auto">
           <div className="rounded-lg p-4 space-y-4 shadow-sm">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-            
               <div className="space-y-4">
              
                   <Input
@@ -315,24 +325,22 @@ const CampanhaFuncionario = () => {
                   )}
                 </div>
               </div>
-
             </div>
-
-         
-            <div className="flex justify-center p-4 mt-4">
-              <Button 
-                type="submit" 
-                className="bg-green-600 py-2 px-6 text-white font-semibold transition duration-150 rounded-md"
-              >
-                Salvar
-              </Button>
-            </div>
+           <div className="flex justify-center pt-6">
+            <Button
+              type="submit"
+              className="bg-green-600 hover:bg-green-700 text-white px-10 py-3 rounded-xl font-medium"
+            >
+              Salvar Campanha
+            </Button>
+          </div>
 
           </div>
         </form>
       </Modal>
-
     </div>
+  </div>
+
   );
 };
 

@@ -108,89 +108,81 @@ const AgendamentoDoador = () => {
     <div className="px-2 sm:px-4 lg:px-20 mt-6">
       <div className="bg-white rounded-2xl p-8 space-y-10 mt-8">
        
-        <div className="flex items-center gap-2 mb-6">
-          <span className="text-xl flex items-center justify-center">
-            <HiCalendar />
-          </span>
-          <h1 className="text-xl font-bold">
-            Meus agendamentos
-          </h1>
+       <div className="mb-6">
+        <h1 className="text-2xl font-semibold text-gray-800">
+          Meus Agendamentos
+        </h1>
+      </div>
+
+  <div className="pt-8 pb-10 px-6 bg-white rounded-xl border border-gray-200 shadow-sm space-y-6">
+        
+        {/* Subtítulo */}
+        <div className="mb-6">
+          <h2 className="text-xl font-medium text-gray-800">
+            Pedido de Agendamento
+          </h2>
         </div>
-
-        <div className="pt-12 pb-10 px-10 rounded-xl shadow space-y-6">
-          <div className="flex items-center gap-2 mb-6">
-            <span className="text-lg flex items-center justify-center">
-              <HiClipboardList />
-            </span>
-            <h1 className="text-lg font-bold">
-              Pedido de agendamento
-            </h1>
+  {!proximoAgendamento && (
+          <div className="text-center p-8 space-y-6">
+            <p className="text-gray-600 text-lg">
+              Você ainda não tem agendamentos pendentes.
+            </p>
+            <Button
+              onClick={() => setMostrarModal(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white py-3 px-8 font-medium rounded-lg"
+            >
+              Novo Agendamento
+            </Button>
           </div>
-
-          
-          {!proximoAgendamento && (
-            <div className="text-center p-6 space-y-4">
-               <div className="flex justify-center">
-                <FaTint className="text-red-500 w-12 h-12" />
-              </div>
-              <p className="text-gray-500"> Você ainda não tem agendamentos pendentes.</p>
-              
-              <Button
-                onClick={() => setMostrarModal(true)}
-                className="bg-red-600 hover:bg-red-700 text-white py-2 px-6 font-semibold rounded-md"
-              >
-                Agendar
-              </Button>
-            </div>
-          )}
-
+        )}
     
           {proximoAgendamento && (
-            <Card className="rounded-xl shadow-lg pt-4 ">
-             <div className="p-4 space-y-4">
-              <div className="flex items-center gap-2 mb-2">
-                <HiClock className="text-amber-500 w-6 h-6" />
-                <h2 className="text-lg font-bold text-amber-700">Aguardando sua confirmação</h2>
-              </div>
-
-               <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border">
-        
-            <p className="text-gray-700">
-              A sua doação está agendada para o dia{" "}
-              <span className="font-semibold">{proximoAgendamento.data_agendamento}</span>{" "}
-              às{" "}
-              <span className="font-semibold">{formatarHora(proximoAgendamento.horario)}</span>{" "}
-              no{" "}
-              <span className="font-semibold">{proximoAgendamento.local_doacao}</span>.
-            </p>
-          </div>
-
-
-                {proximoAgendamento.obs && (
-                  <div className="flex gap-2 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400 text-blue-700">
-                    <HiInformationCircle className="w-5 h-5 mt-0.5" />
-                    <p><strong>Observação:</strong> {proximoAgendamento.obs}</p>
+          <div className="border border-gray-200 rounded-xl p-6 space-y-6">
+            
+            {/* Status - mais neutro, sem cor forte */}
+         <div className="flex justify-end">
+                <div className="flex items-center gap-3">
+                  <div className="px-4 py-1.5 bg-amber-100 text-amber-700 text-sm font-medium rounded-full">
+                    Aguardando Confirmação
                   </div>
-                )}
-
-                <div className="flex flex-col sm:flex-row justify-center gap-4">
-                  <Button
-                    className="bg-green-600 hover:bg-green-700 text-white py-2 px-6 font-semibold rounded-md flex items-center gap-2"
-                    onClick={() => handleAgendamentoResponse(proximoAgendamento.id_agendamento, "Confirmado")}
-                  >
-                    <HiCheck /> Aceitar
-                  </Button>
-
-                  <Button
-                    className="bg-red-600 border-2 hover:bg-red-500 text-white  py-2 px-6 font-semibold rounded-md flex items-center gap-2"
-                    onClick={() => handleAgendamentoResponse(proximoAgendamento.id_agendamento, "Recusado")}
-                  >
-                    <HiX /> Recusar
-                  </Button>
                 </div>
               </div>
-            </Card>
-          )}
+            {/* Informação do agendamento */}
+            <div className="p-5 bg-gray-50 rounded-lg border border-gray-100">
+              <p className="text-gray-700 leading-relaxed">
+                A sua doação está agendada para o dia{" "}
+                <span className="font-semibold">{proximoAgendamento.data_agendamento}</span> às{" "}
+                <span className="font-semibold">{formatarHora(proximoAgendamento.horario)}</span>{" "}
+                no <span className="font-semibold">{proximoAgendamento.local_doacao}</span>.
+              </p>
+            </div>
+
+            {/* Observação (mantém se for útil, mas mais discreta) */}
+            {proximoAgendamento.obs && (
+              <div className="p-5 bg-blue-50 border-l-4 border-blue-300 text-blue-800 rounded-lg">
+                <strong>Observação:</strong> {proximoAgendamento.obs}
+              </div>
+            )}
+
+            {/* Botões - cores mais suaves e sem ícones */}
+            <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
+              <Button
+                className="bg-green-600 hover:bg-green-700 text-white py-3 px-10 font-medium rounded-lg"
+                onClick={() => handleAgendamentoResponse(proximoAgendamento.id_agendamento, "Confirmado")}
+              >
+                Aceitar Agendamento
+              </Button>
+              
+              <Button
+                variant="outline"
+                className="border-red-600 text-red-600 bg-red-50 hover:bg-red-200 py-3 px-10 font-medium rounded-lg"
+                onClick={() => handleAgendamentoResponse(proximoAgendamento.id_agendamento, "Recusado")}
+              >
+                Recusar
+              </Button>
+            </div>
+          </div>
+        )}
         </div>
 
         

@@ -1,14 +1,16 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const Grafico = ({ dados, titulo, xKey, barras = [], barraUnica, altura = 300, icone }) => {
-  // Se barraUnica existir, transforma em array para map
+  // Se barra Unica existir, transforma em array para map
   const barrasParaRender = barraUnica ? [barraUnica] : barras;
 
   return (
     <div className="bg-white p-4 rounded-xl shadow">
-      <div className="flex items-center gap-2 mb-2">
+      <div className="flex items-center gap-2 mb-4">
         {icone && <span className="text-xl text-gray-700">{icone}</span>}
-        <h3 className="font-bold text-gray-800">{titulo}</h3>
+          <h2 className="text-2xl font-bold text-gray-800">
+            {titulo}
+          </h2>
       </div>
 
       {(!dados || dados.length === 0) ? (
