@@ -12,7 +12,7 @@ import campanhaRoutes from './routes/CampanhaRoute.js';
 import agendamentoRoutes from './routes/AgendamentoRoute.js';
 import DashRoutes from './routes/DashboardRoute.js';
 import UserRoutes from './routes/UserRoute.js';
-
+import estoqueRoutes from './routes/EstoqueRoute.js'
 dotenv.config();
 
 const app = express();
@@ -30,6 +30,7 @@ app.use('/campanhas',campanhaRoutes);
 app.use('/agendamentos',agendamentoRoutes);
 app.use('/dashboard',DashRoutes);
 app.use('/usuarios',UserRoutes);
+app.use('/estoque',estoqueRoutes)
 
 
 app.get('/', (req, res) => res.send('Servidor do Sistema de Doação de Sangue!'));
@@ -40,7 +41,7 @@ sequelize.authenticate()
   .catch(err => console.error('Erro ao conectar:', err));
 
 // Sincronização segura: não tenta alterar colunas existentes
-sequelize.sync({ force: false }) // <-- aqui
+sequelize.sync({ force: false })
   .then(() => console.log('BD sincronizada com os modelos'))
   .catch(err => console.error('Erro ao sincronizar BD:', err));
 

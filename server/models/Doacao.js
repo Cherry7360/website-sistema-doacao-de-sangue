@@ -12,7 +12,13 @@ const Doacao = sequelize.define('Doacao', {
   id_agendamento: {
   type: DataTypes.INTEGER,
   allowNull: false,
-}
+},
+  altura_cm: DataTypes.DECIMAL(5, 2),
+    peso_kg: DataTypes.DECIMAL(5, 2),
+    tensao_arterial: DataTypes.STRING(10),
+    volume_ml: DataTypes.INTEGER,
+    tipo_doador: { type: DataTypes.STRING(20), defaultValue: "voluntario" },
+
 
 }, { tableName: 'doacoes', timestamps: false });
 
@@ -26,3 +32,13 @@ Doacao.belongsTo(Funcionario, { foreignKey: 'id_funcionario' });
 Doacao.belongsTo(Agendamento, { foreignKey: 'id_agendamento'});
 
 export default Doacao;
+
+/**
+ * 
+    altura_cm: DataTypes.DECIMAL(5, 2),
+    peso_kg: DataTypes.DECIMAL(5, 2),
+    tensao_arterial: DataTypes.STRING(10),
+    volume_ml: DataTypes.INTEGER,
+    tipo_doador: { type: DataTypes.STRING(20), defaultValue: "voluntario" },
+
+ */

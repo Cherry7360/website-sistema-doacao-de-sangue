@@ -14,7 +14,6 @@ import { notificacaoSchema} from "../Schemas/notificacaoSchema.js";
 export const ListarNotificacoesDoador = async (req, res) => {
   try {
     const codigo = req.usuario.codigo; 
-
     const doador = await Doador.findOne({ where: { codigo_usuario: codigo } });
     if (!doador) {
       return res.status(404).json({ message: "Doador não encontrado." });
@@ -139,6 +138,8 @@ export const EnviarNotificacao = async (req, res) => {
   }
 };
 
+/* envia lembrete um dia antes da doacao pelo email do doador 
+*/
 
 export const EnviarLembretesDoacao = async () => {
   try {
@@ -190,5 +191,75 @@ export const EnviarLembretesDoacao = async () => {
     console.log(`Lembretes enviados por email: ${agendamentos.length}`);
   } catch (err) {
     console.error("Erro ao enviar lembretes por email:", err);
+  }
+};
+
+// envia notificacao e email para o doador quando seu grupo de sangue esta num estado critico
+export const notificarEstoqueCritico = async (req, res) => {
+  try {
+    const { tipos } = req.body; 
+    const codigo_usuario=req.usuario.codigo;
+
+    if (!tipos || tipos.length === 0) {
+      return res.status(400).json({ message: "Nenhum tipo crítico enviado" });
+    }
+
+    // buscar doadores desses tipos
+    const doadores = await Doador.findAll({
+      where: {
+        tipo_sangue: tipos
+      },
+      include:[
+         {
+              model: Usuario,
+              attributes: ["nome", "email"]
+            }
+      ]
+    });
+
+     const funcionario = await Funcionario.findOne({ where: { codigo_usuario } });
+    if (!funcionario) return res.status(404).json({ message: "Funcionário não encontrado." });
+
+    const now = new Date();
+    const dataEnvio = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+    const horaAtual = now.toTimeString().slice(0,5); 
+
+
+    //criar notificações
+  for (const d of doadores) {
+
+  const usuario = d.Usuario;
+
+  // criar notificação
+  await Notificacao.create({
+    id_doador: d.id_doador,
+    mensagem: `O tipo de sangue ${d.tipo_sangue} encontra-se em estado crítico no nosso banco de sangue.`,
+    estado: "nao_lida",
+    data: new Date(),
+    id_funcionario: funcionario.id_funcionario,
+    hora_envio: horaAtual,
+    data_envio: dataEnvio,
+  });
+
+  if (!usuario?.email) continue;
+
+  const { titulo, mensagem } = gerarMensagemNotificacao(
+    "estoque_estado_critico",
+    {
+      nome: usuario.nome,
+      tipo_sangue: d.tipo_sangue,
+    }
+  );
+
+  await emailSender(usuario.email, titulo, mensagem);
+}
+    return res.json({
+      message: "Notificações enviadas com sucesso",
+      total: doadores.length
+    });
+
+  } catch (err) {
+    console.error(err);    console.error("ERRO:", err.response?.data || err);
+    return res.status(500).json({ message: "Erro ao enviar notificações" });
   }
 };

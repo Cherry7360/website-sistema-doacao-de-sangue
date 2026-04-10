@@ -1,5 +1,8 @@
-export function gerarMensagemNotificacao(tipo, dados = {}) {
 
+// Função responsável por gerar o conteúdo (título e mensagem) das notificações
+// com base no tipo de evento e nos dados recebidos do sistema.
+
+export function gerarMensagemNotificacao(tipo, dados = {}) {
 
   switch (tipo) {
   case "novo_agendamento":
@@ -11,7 +14,6 @@ export function gerarMensagemNotificacao(tipo, dados = {}) {
         : `Tem um novo pedido de agendamento. Clique para ver os detalhes.`
        
   };
-
 
     case "agendamento_aceite":
       return {
@@ -37,7 +39,7 @@ export function gerarMensagemNotificacao(tipo, dados = {}) {
         mensagem: `Uma nova campanha foi lançada em ${dados.local || "local não especificado"}! Data: ${dados.data || "brevemente"}.`,
       };
 
-       case "lembrete_doacao":
+    case "lembrete_doacao":
      
       let saudacao = "Lembrete";
       if (dados.genero === "Feminino") saudacao = "Olá senhora";
@@ -48,6 +50,20 @@ export function gerarMensagemNotificacao(tipo, dados = {}) {
         mensagem: `${saudacao} ${dados.nome}, você tem uma doação amanhã às ${dados.horario} no local ${dados.local_doacao}.`,
       };
 
+
+    case "estoque_estado_critico":
+        return {
+          titulo: "Urgente: Doação de Sangue Necessária",
+          mensagem: `Prezado(a) ${dados.nome},
+
+      O tipo de sangue ${dados.tipo_sangue} encontra-se em estado crítico no nosso banco de sangue.
+
+      A sua ajuda pode salvar vidas. Se possível, dirija-se ao banco de sangue.
+
+      Atenciosamente,
+      Banco de Sangue`
+        };
+
     default:
       return {
         titulo: "Notificação",
@@ -55,4 +71,3 @@ export function gerarMensagemNotificacao(tipo, dados = {}) {
       };
   }
 }
- /*`Foi criado um novo agendamento para você no dia ${dados.data_agendamento} às ${dados.horario || ""} no local ${dados.local_doacao}.`, */

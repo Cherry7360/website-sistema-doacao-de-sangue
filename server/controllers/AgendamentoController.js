@@ -182,23 +182,19 @@ export const CriarAgendamento = async (req, res) => {
 
 export const ListarAgendamentos = async (req, res) => {
   try {
-   
-
     const agendamentos = await Agendamento.findAll({
       include: [
         {
           model: Doador,
+          attributes: ["id_doador"],
           include: [
             {
               model: Usuario,
               attributes: ["nome"], 
             },
-          ],
-        },
-      ],
+          ],},],
       order: [["data_agendamento", "DESC"], ["horario", "DESC"],  ['estado', 'ASC']],
     });
-
     res.json(agendamentos);
   } catch (err) {
     console.error("Erro ao buscar agendamentos:", err);

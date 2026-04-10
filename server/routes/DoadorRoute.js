@@ -9,10 +9,12 @@ const router = express.Router();
 
 //rotas do doador
 router.post('/', RegistarDoador);
-router.get('/meu-perfil', verifyToken , PerfilDoador);
-router.get('/', ListarDoadores)
+router.get('/meu-perfil', verifyToken, PerfilDoador);
 router.post('/meu-perfil/foto',verifyToken,upload.single("foto"),AtualizarFotoDoador);
 router.put('/',verifyToken,AtualizarDadosDoador);
 router.put('/palavra-passe',verifyToken,AtualizarPalavrapasse);
+//rotas do funcionario
+
+router.get('/', ListarDoadores)
 
 export default router;

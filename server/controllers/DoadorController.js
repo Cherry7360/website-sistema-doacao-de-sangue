@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import Doador from "../models/Doador.js";
 import Usuario from "../models/Usuario.js";
-
+import Doacao from "../models/Doacao.js"
 
 import fs from 'fs';
 import path from 'path';
@@ -32,10 +32,10 @@ const gerarCodigoUsuario = async () => {
 */
 export const RegistarDoador = async (req, res) => {
   const transaction = await sequelize.transaction(); 
-const result = registoSchema.safeParse(req.body);
-if (!result.success) {
-  return res.status(400).json({ errors: result.error.errors });
-}
+  const result = registoSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({ errors: result.error.errors });
+  }
 
   try {
     const { nome, morada, cni, email, telefone, tipo_sangue, profissao,genero} = result.data;
@@ -134,9 +134,16 @@ export const PerfilDoador = async (req, res) => {
     });
 
     if (!doador) return res.status(404).json({ mensagem: "Doador não encontrado" });
+ const infoDoacao = await Doacao.findOne({
+      where: { id_doador: doador.id_doador },
+    order: [["data_doacao", "DESC"]],
+      attributes: ["altura_cm", "peso_kg", "tensao_arterial"]
+    });
 
-    res.json(doador);
-
+      res.json({
+      ...doador.toJSON(),
+      ...infoDoacao?.toJSON()
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ erro: "Erro ao buscar perfil do doador" });
@@ -154,7 +161,7 @@ export const ListarDoadores = async (req, res) => {
       include: [
         {
           model: Usuario,
-          attributes: ["nome", "email", "cni", "telefone", "morada", "foto"]
+          attributes: ["nome", "email", "cni", "telefone", "morada", "foto", "codigo_usuario"]
         }
       ],
       order: [["id_doador", "ASC"]]

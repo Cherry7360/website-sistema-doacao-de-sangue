@@ -146,15 +146,15 @@ export const ObterInformacaoDoador = async (req, res) => {
     // Próxima doação e status
     let proxima_doacao = null;
     let status_doacao = null;      // "aguardando", "urgente", "disponivel", "primeira"
-    let diasDesdeProxima = null;   // contador de dias para exibir no frontend
+    let diasDesdeProxima = null;   
 
     if (!ultima_doacao) {
-      // Nunca doou → primeira doação
+      // primeira doação
       proxima_doacao = null;
       status_doacao = "primeira";
       diasDesdeProxima = null;
     } else {
-      // Já doou → calcula próxima data com base no sexo
+      // calcula próxima data com base no sexo
       const genero = doador.Usuario?.genero;
       const diasIntervalo = genero === "Feminino" ? 120 : 90;
 
@@ -182,13 +182,13 @@ export const ObterInformacaoDoador = async (req, res) => {
       const diffParaHoje = Math.floor((hoje - dataProxima) / (1000 * 60 * 60 * 24));
 
       if (diffParaHoje < 0) {
-        status_doacao = "Aguardando ";             // Próxima ainda não chegou
+        status_doacao = "Aguardando ";            
         diasDesdeProxima = Math.abs(diffParaHoje);
       } else if (diffParaHoje === 0) {
-        status_doacao = "Urgente";                // Hoje pode doar
+        status_doacao = "Urgente";              
         diasDesdeProxima = 0;
       } else {
-        status_doacao = "Disponivel";             // Já passou → apto para doar
+        status_doacao = "Disponivel";            
         diasDesdeProxima = diffParaHoje;
       }
     }

@@ -63,19 +63,10 @@ export const obterInfoDashboard = async (req, res) => {
     }, []).sort((a, b) => a.ano - b.ano);
 
 
-
-    const estoqueSangue = doacoes.reduce((acc, doacao) => {
-      const tipo = doacao.Doador?.tipo_sangue || "Desconhecido";
-      acc[tipo] = (acc[tipo] || 0) + 1;
-      return acc;
-    }, {});
-
-    // Transformar em array para front-end / gráficos
-    const estoqueArray = Object.keys(estoqueSangue).map(tipo => ({
-      tipo,
-      total: estoqueSangue[tipo]
-    }));
-    
+const campanhasAtivas = await Campanha.count({
+  where: { estado: "true" }
+});
+   
 
     res.json({
       totalDoadores,
@@ -84,8 +75,8 @@ export const obterInfoDashboard = async (req, res) => {
       doacoesPorAno,
       campanhasPorAno,
       Totalfeminino,
-      Totalmasculino,
-      estoqueSangue: estoqueArray,
+      Totalmasculino, campanhasAtivas
+   
     });
 
   } catch (err) {
@@ -93,6 +84,7 @@ export const obterInfoDashboard = async (req, res) => {
     res.status(500).json({ message: "Erro ao obter informações do dashboard" });
   }
 };
+
 
 /*
 Retorna dados do perfil do usuário logado.
@@ -116,6 +108,7 @@ export const getPerfilUsuario = async (req, res) => {
     res.status(500).json({ mensagem: "Erro ao buscar perfil do usuário." });
   }
 };
+
 
 
 
